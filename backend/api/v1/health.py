@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from core.database import check_database_connectivity
 from core.config import get_settings
+from ml.model_loader import is_model_loaded
 
 router = APIRouter()
 
@@ -15,9 +16,10 @@ router = APIRouter()
 class HealthResponse(BaseModel):
     """Skema respons health check."""
 
-    status: str          # "ok" atau "degraded"
-    database: str        # "connected" atau "disconnected"
-    version: str         # Versi aplikasi
+    status: str       # "ok" atau "degraded"
+    database: str     # "connected" atau "disconnected"
+    ml_model: str     # "loaded" atau "not_loaded"
+    version: str      # Versi aplikasi
 
 
 @router.get(
@@ -25,7 +27,7 @@ class HealthResponse(BaseModel):
     response_model=HealthResponse,
     summary="Health Check",
     description=(
-        "Periksa status sistem dan konektivitas database. "
+        "Periksa status sistem, konektivitas database, dan status model ML. "
         "Mengembalikan 'ok' jika semua layanan berjalan normal."
     ),
     tags=["System"],
@@ -35,17 +37,21 @@ async def health_check() -> HealthResponse:
     Endpoint health check.
 
     Mengembalikan:
-    - status: "ok" jika database terhubung, "degraded" jika tidak
+    - status: "ok" jika database terhubung dan model dimuat, "degraded" jika tidak
     - database: "connected" atau "disconnected"
+    - ml_model: "loaded" atau "not_loaded"
     - version: versi aplikasi saat ini
     """
     settings = get_settings()
 
-    # Periksa konektivitas database tanpa melempar exception
     db_connected = await check_database_connectivity()
+    model_loaded = is_model_loaded()
+
+    overall_ok = db_connected and model_loaded
 
     return HealthResponse(
-        status="ok" if db_connected else "degraded",
+        status="ok" if overall_ok else "degraded",
         database="connected" if db_connected else "disconnected",
+        ml_model="loaded" if model_loaded else "not_loaded",
         version=settings.APP_VERSION,
     )
