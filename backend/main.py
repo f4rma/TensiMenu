@@ -12,6 +12,7 @@ from slowapi.errors import RateLimitExceeded
 from api.v1.router import api_router
 from core.config import get_settings
 from core.rate_limiter import limiter, rate_limit_exceeded_handler
+from ml.model_loader import load_model_artifacts
 
 # Konfigurasi logging dasar
 logging.basicConfig(
@@ -28,6 +29,16 @@ async def lifespan(app: FastAPI):
     logger.info("TensiMenu Backend v%s sedang dimulai...", settings.APP_VERSION)
     logger.info("Mode debug: %s", settings.DEBUG)
     logger.info("CORS origins yang diizinkan: %s", settings.cors_origins_list)
+
+    # Muat artefak model ML saat startup (sekali, simpan di memori)
+    try:
+        artifacts = load_model_artifacts()
+        logger.info("Model ML dimuat: %s", artifacts)
+    except FileNotFoundError as exc:
+        logger.warning("Artefak model tidak ditemukan: %s. Endpoint rekomendasi tidak tersedia.", str(exc))
+    except Exception as exc:
+        logger.error("Gagal memuat model ML: %s", str(exc))
+
     yield
     logger.info("TensiMenu Backend sedang dimatikan.")
 
