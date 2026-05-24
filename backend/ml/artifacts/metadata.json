@@ -1,0 +1,64 @@
+{
+  "version": "1.0.0",
+  "trained_at": "2026-05-21T18:04:45.461696Z",
+  "random_state": 42,
+  "n_items": 792,
+  "n_features": 5,
+  "features": [
+    "sodium_mg",
+    "potassium_mg",
+    "calcium_mg",
+    "fiber_g",
+    "fat_total_g"
+  ],
+  "nutrient_weights": {
+    "sodium_mg": {
+      "direction": "lower",
+      "weight": 0.3
+    },
+    "potassium_mg": {
+      "direction": "higher",
+      "weight": 0.25
+    },
+    "calcium_mg": {
+      "direction": "higher",
+      "weight": 0.2
+    },
+    "fiber_g": {
+      "direction": "higher",
+      "weight": 0.15
+    },
+    "fat_total_g": {
+      "direction": "lower",
+      "weight": 0.1
+    }
+  },
+  "scaler_mean": [
+    35.710315656565655,
+    66.06414141414142,
+    62.175000000000004,
+    5.144444444444445,
+    5.872222222222221
+  ],
+  "scaler_scale": [
+    314.69397019292285,
+    181.5797082036799,
+    119.06354090984318,
+    17.1731238060236,
+    9.465154654705119
+  ],
+  "dataset": "TKPI_2017",
+  "categories_included": [
+    "Serealia",
+    "Umbi Berpati",
+    "Kacang & Biji",
+    "Sayuran",
+    "Buah",
+    "Daging & Unggas",
+    "Ikan, Kerang & Udang",
+    "Telur",
+    "Susu"
+  ],
+  "min_features_required": 3,
+  "imputation_method": "median_per_category"
+}
