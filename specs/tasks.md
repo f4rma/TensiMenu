@@ -1,4 +1,4 @@
-﻿# Tasks — TensiMenu
+﻿# Tasks TensiMenu
 
 Dokumen ini mendefinisikan semua tugas implementasi untuk membangun TensiMenu — sistem rekomendasi makanan lokal berbasis DASH Diet untuk penderita hipertensi. Tugas diurutkan dari infrastruktur dasar hingga pengujian dan deployment.
 
@@ -48,7 +48,9 @@ umpy, pandas, joblib, slowapi, python-dotenv
 
 - [ ] 4. Konfigurasi frontend Next.js dasar
   - Install dependensi: 
-ext-auth, @supabase/supabase-js, xios, eact-hook-form, zod, echarts, @radix-ui/react-* (komponen UI dasar)
+ext-auth, @supabase/supabase-js, xios, 
+eact-hook-form, zod, 
+echarts, @radix-ui/react-* (komponen UI dasar)
   - Buat src/lib/supabase.ts untuk Supabase client (browser dan server)
   - Buat src/lib/auth.ts dengan konfigurasi NextAuth.js: Google Provider, Credentials Provider, JWT strategy (maxAge 30 menit)
   - Buat src/app/api/auth/[...nextauth]/route.ts sebagai handler NextAuth.js
@@ -64,8 +66,8 @@ ext-auth, @supabase/supabase-js, xios, eact-hook-form, zod, echarts, @radix-u
 ## Fase 2: Autentikasi dan Manajemen Sesi
 
 - [ ] 5. Implementasi registrasi pengguna (backend)
-  - Buat ackend/models/user.py dengan Pydantic models: UserRegisterRequest, UserRegisterResponse
-  - Buat ackend/api/v1/auth.py dengan endpoint POST /api/v1/auth/register
+  - Buat Backend/models/user.py dengan Pydantic models: UserRegisterRequest, UserRegisterResponse
+  - Buat Backend/api/v1/auth.py dengan endpoint POST /api/v1/auth/register
   - Implementasi logika: validasi email unik via Supabase Auth, hash password, buat akun Supabase Auth
   - Kembalikan HTTP 201 dengan user_id dan pesan sukses jika berhasil
   - Kembalikan HTTP 409 dengan {"detail": "Email sudah terdaftar", "error_code": "EMAIL_ALREADY_EXISTS"} jika email duplikat
@@ -88,7 +90,8 @@ ext-auth, @supabase/supabase-js, xios, eact-hook-form, zod, echarts, @radix-u
   - Buat src/components/auth/LoginForm.tsx dengan form email/password dan tombol "Masuk dengan Google"
   - Buat src/components/auth/RegisterForm.tsx dengan form nama lengkap, email, dan kata sandi
   - Buat src/app/(auth)/login/page.tsx dan src/app/(auth)/register/page.tsx
-  - Implementasi validasi form sisi klien menggunakan eact-hook-form + zod
+  - Implementasi validasi form sisi klien menggunakan 
+eact-hook-form + zod
   - Tampilkan pesan error yang sesuai (email duplikat, kredensial salah, dll.)
   - Redirect ke /profile setelah registrasi berhasil; redirect ke / setelah login berhasil
   - Implementasi Google OAuth flow via NextAuth.js signIn('google')
@@ -119,7 +122,7 @@ ext-auth, @supabase/supabase-js, xios, eact-hook-form, zod, echarts, @radix-u
   - **Persyaratan:** 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 12.3
 
 - [ ] 10. Implementasi kalkulasi target nutrisi personal (backend)
-  - Buat ackend/services/nutrition_calculator.py dengan fungsi calculate_personal_targets(profile)
+  - Buat Backend/services/nutrition_calculator.py dengan fungsi calculate_personal_targets(profile)
   - Implementasi rumus Mifflin-St Jeor untuk BMR (laki-laki dan perempuan)
   - Hitung semua target DASH: natrium (2300 mg, atau 1500 mg jika sistolik >= 150 atau CKD), kalium (4000 mg, atau maks 2000 mg jika CKD), serat (25g perempuan / 38g laki-laki), kalsium (1000 mg usia <= 50 / 1200 mg usia > 50), magnesium (310 mg perempuan / 400 mg laki-laki), batas lemak jenuh (7% energi), batas lemak total (27% energi)
   - Simpan daily_targets sebagai JSONB ke tabel user_profiles bersama data profil
@@ -158,7 +161,8 @@ ext-auth, @supabase/supabase-js, xios, eact-hook-form, zod, echarts, @radix-u
   - Susun minimal 200 item makanan lokal Indonesia mencakup: Minang, Jawa, Sunda, Batak, Bugis, Papua
   - Pastikan setiap item memiliki 10 komponen nutrisi DASH: energi (kkal), protein (g), lemak total (g), lemak jenuh (g), karbohidrat (g), serat (g), natrium (mg), kalium (mg), kalsium (mg), magnesium (mg) per 100 gram
   - Kategorikan setiap item: sarapan, makan_siang, makan_malam, camilan
-  - Untuk item tanpa data primer, gunakan makanan referensi sebagai proxy dan tandai is_estimated: true, eference_food: "<nama proxy>", confidence_level: "rendah"
+  - Untuk item tanpa data primer, gunakan makanan referensi sebagai proxy dan tandai is_estimated: true, 
+eference_food: "<nama proxy>", confidence_level: "rendah"
   - Catat data_source untuk setiap item: DKPI, USDA, Nutrisurvey, atau Estimasi
   - Siapkan file seed SQL atau CSV untuk import ke Supabase
   - **Dependensi:** Task 2
@@ -202,20 +206,24 @@ ext-auth, @supabase/supabase-js, xios, eact-hook-form, zod, echarts, @radix-u
 - [ ] 17. Implementasi Content-Based Filtering dengan cosine similarity (ML)
   - Buat ackend/ml/content_based_filter.py dengan class ContentBasedFilter
   - Implementasi metode it(food_items): latih StandardScaler dan buat item feature matrix
-  - Implementasi metode ecommend(user_vector, food_items, top_k, filters): hitung cosine similarity, urutkan, terapkan filter
+  - Implementasi metode 
+ecommend(user_vector, food_items, top_k, filters): hitung cosine similarity, urutkan, terapkan filter
   - Filter komorbid dan pantangan diterapkan **sebelum** perhitungan similarity
   - Implementasi aturan anti-repetisi: turunkan prioritas makanan yang dikonsumsi dalam 3 hari terakhir (bukan hapus)
   - Jika kandidat yang memenuhi batasan < 4 item, abaikan aturan anti-repetisi dan tambahkan label "Sudah pernah direkomendasikan"
-  - Gunakan andom_state=42 untuk reprodusibilitas
+  - Gunakan 
+andom_state=42 untuk reprodusibilitas
   - **Dependensi:** Task 16
   - **Persyaratan:** 3.2, 3.11, 3.12, 8.1, 8.3
 
 - [ ] 18. Implementasi training pipeline dan penyimpanan artefak model (ML)
   - Buat ackend/ml/pipeline.py dengan fungsi 	rain_and_save_model(food_items, output_path)
   - Set seed: 
-p.random.seed(42), andom.seed(42) sebelum training
+p.random.seed(42), 
+andom.seed(42) sebelum training
   - Simpan artefak model menggunakan joblib.dump(): scaler.pkl, item_matrix.npy, ood_ids.json, metadata versi
-  - Simpan metadata: ersion, 	rained_at, andom_state, 
+  - Simpan metadata: ersion, 	rained_at, 
+andom_state, 
 _items
   - Buat ackend/ml/model_loader.py dengan fungsi load_model_artifacts(path) untuk memuat artefak saat startup
   - Buat skrip training yang dapat dijalankan secara mandiri (Google Colab / Railway)
@@ -292,7 +300,7 @@ _items
 ## Fase 7: Sistem Rekomendasi Makanan Harian
 
 - [ ] 25. Implementasi service rekomendasi (backend)
-  - Buat ackend/services/recommendation_service.py dengan class RecommendationService
+  - Buat Backend/services/recommendation_service.py dengan class RecommendationService
   - Implementasi metode generate_meal_plan(user_id):
     1. Muat profil pengguna dan daily_targets dari database
     2. Bangun user nutrition vector dari daily_targets
@@ -309,7 +317,7 @@ _items
   - **Persyaratan:** 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.10, 3.11, 3.12
 
 - [ ] 26. Implementasi endpoint rekomendasi (backend)
-  - Buat ackend/api/v1/recommendations.py dengan endpoint:
+  - Buat Backend/api/v1/recommendations.py dengan endpoint:
     - GET /api/v1/recommendations — hasilkan rencana makan harian (waktu respons <= 5 detik)
     - GET /api/v1/recommendations/{food_id}/alternatives — dapatkan minimal 3 alternatif makanan
     - POST /api/v1/recommendations/confirm — konfirmasi konsumsi rencana makan (simpan ke consumption_logs)
@@ -349,7 +357,7 @@ utrition_warnings jika ada
 ## Fase 8: Tracker Progres Harian
 
 - [ ] 29. Implementasi service dan endpoint tracker progres (backend)
-  - Buat ackend/services/progress_service.py dengan fungsi:
+  - Buat Backend/services/progress_service.py dengan fungsi:
     - get_progress_trend(user_id, period_days) — ambil tren DASH Score untuk 7/30/90 hari
     - get_weekly_summary(user_id) — hitung rata-rata DASH Score, total natrium, total kalium untuk 7 hari terakhir
     - get_compliance_percentage(user_id) — hitung persentase hari dengan DASH Score >= 60
@@ -388,7 +396,7 @@ utrition_warnings jika ada
 - [ ] 32. Implementasi endpoint riwayat tekanan darah (backend)
   - Buat ackend/models/blood_pressure.py dengan Pydantic models: BloodPressureCreate, BloodPressureResponse
   - Field is_critical dihitung otomatis: True jika sistolik >= 180 atau diastolik >= 120
-  - Buat ackend/api/v1/blood_pressure.py dengan endpoint:
+  - Buat Backend/api/v1/blood_pressure.py dengan endpoint:
     - POST /api/v1/blood-pressure — catat tekanan darah baru
     - GET /api/v1/blood-pressure — daftar riwayat (dengan filter periode)
     - GET /api/v1/blood-pressure/export — ekspor CSV
@@ -492,11 +500,11 @@ otes
 
 - [ ] 41. Implementasi aksesibilitas WCAG 2.1 AA (frontend)
   - Audit dan perbaiki kontras warna: pastikan rasio minimum 4.5:1 untuk semua teks utama
-  - Tambahkan lt text deskriptif untuk semua gambar makanan dan ikon fungsional
+  - Tambahkan Alt text deskriptif untuk semua gambar makanan dan ikon fungsional
   - Pastikan semua form memiliki label yang terhubung dengan benar (htmlFor / ria-label)
   - Implementasi navigasi keyboard yang lengkap (Tab, Enter, Escape) untuk semua komponen interaktif
-  - Tambahkan ria-live regions untuk notifikasi dinamis (loading, error, sukses)
-  - Tambahkan ole dan ria-* attributes yang sesuai untuk komponen kustom (gauge chart, badge)
+  - Tambahkan Aria-live regions untuk notifikasi dinamis (loading, error, sukses)
+  - Tambahkan ole dan Aria-* attributes yang sesuai untuk komponen kustom (gauge chart, badge)
   - Pastikan semua konten dalam Bahasa Indonesia (tidak ada teks hardcoded dalam bahasa lain)
   - **Dependensi:** Task 35
   - **Persyaratan:** 9.3, 9.4, 9.5
@@ -544,7 +552,8 @@ utrition_calculator.py: verifikasi rumus Mifflin-St Jeor untuk berbagai kombinas
   - Tulis unit tests untuk dash_score_service.py: verifikasi formula DASH Score dengan nilai nutrisi yang diketahui
   - Tulis unit tests untuk 
 utrition_validator.py: verifikasi validasi batasan komorbid CKD dan diabetes
-  - Tulis unit tests untuk ecommendation_service.py: verifikasi filter pantangan, aturan anti-repetisi, dan fallback
+  - Tulis unit tests untuk 
+ecommendation_service.py: verifikasi filter pantangan, aturan anti-repetisi, dan fallback
   - Tulis unit tests untuk content_based_filter.py: verifikasi cosine similarity dan urutan hasil
   - Gunakan pytest dengan pytest-asyncio untuk endpoint async
   - Target: coverage >= 80% untuk semua service dan ML modules
