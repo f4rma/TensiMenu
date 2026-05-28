@@ -25,9 +25,12 @@ def recommend(
     category_filter: Optional[str] = None,
     exclude_ids: Optional[list[str]] = None,
     comorbidities: Optional[list[str]] = None,
+    similarity_weight: float = 0.4,
+    dash_weight: float = 0.6,
 ) -> pd.DataFrame:
     """
-    Hasilkan rekomendasi makanan berdasarkan cosine similarity.
+    Hasilkan rekomendasi makanan berdasarkan composite ranking
+    (cosine similarity + DASH score).
 
     Pipeline:
     1. Bangun user nutrition vector dari target personal
@@ -35,7 +38,9 @@ def recommend(
     3. Hitung cosine similarity vs item_matrix
     4. Terapkan filter komorbid (SEBELUM ranking)
     5. Terapkan filter kategori dan anti-repetisi
-    6. Kembalikan top_k item
+    6. Hitung composite score = (similarity_weight × similarity_norm) +
+       (dash_weight × dash_score_norm)
+    7. Kembalikan top_k item
 
     Args:
         user_targets: dict dari calculate_personal_targets()
@@ -45,9 +50,12 @@ def recommend(
         category_filter: filter kategori TKPI (misal 'Sayuran')
         exclude_ids: food_code yang dikecualikan (anti-repetisi 3 hari)
         comorbidities: list komorbid pengguna untuk filter keamanan
+        similarity_weight: bobot similarity (default 0.4)
+        dash_weight: bobot DASH score (default 0.6)
 
     Returns:
-        DataFrame dengan kolom: food_code, name, category, similarity, dash_score
+        DataFrame dengan kolom: food_code, name, category, similarity,
+        dash_score, composite_score
     """
     if comorbidities is None:
         comorbidities = []
@@ -111,14 +119,30 @@ def recommend(
     df = df.reset_index(drop=True)
     df["similarity"] = similarities
 
-    # Sort dan ambil top_k
-    df = df.sort_values("similarity", ascending=False).head(top_k)
+    # Composite ranking: gabung similarity + DASH score (jika tersedia)
+    # Normalisasi keduanya ke [0, 1]
+    if "dash_score" in df.columns:
+        sim_min, sim_max = df["similarity"].min(), df["similarity"].max()
+        sim_range = sim_max - sim_min if sim_max > sim_min else 1.0
+        df["sim_norm"] = (df["similarity"] - sim_min) / sim_range
+        df["dash_norm"] = df["dash_score"] / 100.0
+
+        df["composite_score"] = (
+            similarity_weight * df["sim_norm"]
+            + dash_weight * df["dash_norm"]
+        )
+        df = df.sort_values("composite_score", ascending=False).head(top_k)
+        df = df.drop(columns=["sim_norm", "dash_norm"])
+    else:
+        df = df.sort_values("similarity", ascending=False).head(top_k)
 
     cols = ["food_code", "name", "category", "similarity"]
     if "dash_score" in df.columns:
         cols.append("dash_score")
     if "dash_category" in df.columns:
         cols.append("dash_category")
+    if "composite_score" in df.columns:
+        cols.append("composite_score")
 
     return df[cols].reset_index(drop=True)
 

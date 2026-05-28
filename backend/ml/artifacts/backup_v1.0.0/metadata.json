@@ -1,6 +1,6 @@
 {
   "version": "1.1.0",
-  "trained_at": "2026-05-27T11:39:26.477219+00:00",
+  "trained_at": "2026-05-27T11:33:45.999202+00:00",
   "random_state": 42,
   "n_items": 822,
   "n_features": 5,
@@ -49,41 +49,4 @@
   ],
   "datasets": {
     "TKPI_2017": {
-      "n_items": 792
-    },
-    "Traditional_Dishes_v1": {
-      "n_items": 30
-    }
-  },
-  "categories_included": [
-    "Buah",
-    "Daging & Unggas",
-    "Ikan, Kerang & Udang",
-    "Kacang & Biji",
-    "Sayuran",
-    "Serealia",
-    "Susu",
-    "Telur",
-    "Umbi Berpati"
-  ],
-  "regions_included": [
-    "Indonesia",
-    "Jakarta",
-    "Jawa",
-    "Jawa Barat",
-    "Jawa Tengah",
-    "Jawa Timur",
-    "Nasional",
-    "Papua",
-    "Sulawesi Selatan",
-    "Sulawesi Utara",
-    "Sumatera Barat",
-    "Sumatera Utara"
-  ],
-  "min_features_required": 3,
-  "imputation_method": "zero_for_missing",
-  "changelog": [
-    "v1.0.0: Initial training with TKPI 2017 (792 items)",
-    "v1.1.0: Added 30 traditional Indonesian dishes with estimated DASH nutrition"
-  ]
-}
+      "n_items": 

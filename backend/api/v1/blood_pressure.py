@@ -61,6 +61,11 @@ async def create_blood_pressure(
     Simpan catatan tekanan darah baru.
     Field `is_critical` dihitung otomatis: True jika sistolik >= 180 atau diastolik >= 120.
 
+    Side effect (Req. 2.8 + 2.11):
+    - Update `systolic_bp` dan `diastolic_bp` di profile pengguna
+    - Re-calculate `daily_targets` agar rekomendasi selalu sync dengan
+      kondisi BP terkini (mis. natrium turun ke 1500 mg jika sistolik >= 150)
+
     - HTTP 201: berhasil disimpan
     - HTTP 422: nilai di luar rentang valid
     """
@@ -90,7 +95,70 @@ async def create_blood_pressure(
         "Tekanan darah dicatat untuk user %s: %d/%d (kritis=%s)",
         current_user.sub, body.systolic_mmhg, body.diastolic_mmhg, is_crit,
     )
+
+    # Auto-sync ke profile + re-calculate daily_targets
+    _sync_bp_to_profile(
+        user_id=current_user.sub,
+        systolic=body.systolic_mmhg,
+        diastolic=body.diastolic_mmhg,
+    )
+
     return _row_to_response(response.data[0])
+
+
+def _sync_bp_to_profile(user_id: str, systolic: int, diastolic: int) -> None:
+    """
+    Update BP terbaru di profile + re-calculate daily_targets.
+
+    Idempotent: dipanggil setelah setiap insert BP record.
+    Tidak melempar exception kalau gagal — log saja untuk avoid block POST.
+    """
+    from services.nutrition_calculator import calculate_personal_targets
+
+    supabase = get_supabase()
+
+    try:
+        # Ambil profile untuk dapat parameter lain (gender, BB, TB, age, comorbid)
+        profile_resp = (
+            supabase.table("user_profiles")
+            .select("gender, weight_kg, height_cm, age, comorbidities")
+            .eq("user_id", user_id)
+            .maybe_single()
+            .execute()
+        )
+
+        if not profile_resp or not profile_resp.data:
+            logger.warning("Profile tidak ditemukan saat sync BP untuk user %s", user_id)
+            return
+
+        profile = profile_resp.data
+
+        # Re-calculate daily_targets dengan BP terbaru
+        new_targets = calculate_personal_targets(
+            gender=profile["gender"],
+            weight_kg=float(profile["weight_kg"]),
+            height_cm=float(profile["height_cm"]),
+            age=int(profile["age"]),
+            comorbidities=profile.get("comorbidities") or [],
+            systolic_bp=systolic,
+        )
+
+        # Update profile
+        supabase.table("user_profiles").update({
+            "systolic_bp": systolic,
+            "diastolic_bp": diastolic,
+            "daily_targets": new_targets,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }).eq("user_id", user_id).execute()
+
+        logger.info(
+            "Profile BP & daily_targets di-sync untuk user %s: %d/%d, sodium target = %s mg",
+            user_id, systolic, diastolic, new_targets.get("sodium_mg"),
+        )
+
+    except Exception as exc:
+        # Tidak fatal — BP record tetap tersimpan
+        logger.error("Gagal sync BP ke profile untuk user %s: %s", user_id, str(exc))
 
 
 @router.get(
