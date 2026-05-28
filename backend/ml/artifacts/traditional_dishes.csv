@@ -1,0 +1,31 @@
+food_code,name,category,region,meal_type,energy_kcal,protein_g,fat_total_g,fat_saturated_g,carbs_g,fiber_g,sodium_mg,potassium_mg,calcium_mg,magnesium_mg,phosphorus_mg,iron_mg,data_source,is_estimated,reference,dash_score,dash_category
+ID-NU001,Rendang Sapi,Daging & Unggas,Sumatera Barat,makan_siang,200,22.0,11.0,6.5,4.0,1.5,480,290,28,24,165,2.8,Estimasi-USDA,True,USDA Beef in coconut sauce + Indonesian recipe,48.9,Cukup
+ID-NU002,Gulai Ayam,Daging & Unggas,Sumatera Barat,makan_siang,165,14.5,11.0,6.0,3.0,0.8,420,240,22,20,145,1.5,Estimasi,True,Decomposition: ayam + santan + bumbu kuning,46.8,Cukup
+ID-NU003,Sate Ayam,Daging & Unggas,Sumatera Barat,makan_siang,188,18.0,9.5,2.5,6.5,1.2,520,220,18,22,145,1.4,Estimasi-USDA,True,USDA Chicken satay,46.6,Cukup
+ID-NU010,Soto Ayam,Daging & Unggas,Jawa Tengah,sarapan,95,8.5,4.5,1.2,5.5,0.8,380,195,25,18,105,1.0,Estimasi,True,Decomposition: ayam + soun + bumbu,46.1,Cukup
+ID-NU011,Gado-gado,Sayuran,Jakarta,makan_siang,137,6.5,7.0,1.8,14.0,4.5,260,380,75,45,105,1.8,Eatthismuch + adjustment,True,EatThisMuch Indonesian Gado-gado Salad,57.0,Cukup
+ID-NU012,Pecel Sayur,Sayuran,Jawa Timur,sarapan,110,5.5,5.5,1.0,12.0,5.2,240,410,92,50,95,2.0,Estimasi,True,"Decomposition: bayam, kacang panjang, tauge, bumbu kacang",59.4,Cukup
+ID-NU013,Sayur Asem,Sayuran,Jawa Barat,makan_siang,35,1.5,0.6,0.2,6.5,2.5,220,280,38,22,42,0.8,Estimasi,True,"Decomposition: melinjo, kacang panjang, jagung, asam jawa",50.5,Cukup
+ID-NU014,Sayur Lodeh,Sayuran,Jawa,makan_siang,92,3.5,6.5,4.0,6.0,2.8,280,295,45,28,60,1.0,Estimasi,True,Decomposition: santan + sayuran campur,51.5,Cukup
+ID-NU015,Rawon,Daging & Unggas,Jawa Timur,makan_siang,145,14.0,8.0,3.2,4.5,1.0,410,280,22,25,130,2.2,Estimasi,True,Decomposition: daging sapi + kluwek + bumbu,47.8,Cukup
+ID-NU016,Nasi Uduk,Serealia,Jakarta,sarapan,175,3.5,5.5,4.0,28.5,0.8,220,95,12,18,55,0.6,Estimasi,True,Decomposition: beras + santan,43.4,Cukup
+ID-NU020,Soto Betawi,Daging & Unggas,Jakarta,makan_siang,135,9.5,8.8,5.0,4.5,0.6,460,220,35,18,110,1.5,Estimasi,True,Decomposition: daging sapi + santan + susu,46.9,Cukup
+ID-NU021,Ketoprak,Sayuran,Jakarta,makan_siang,155,7.0,7.0,1.5,18.0,3.0,320,240,95,35,120,1.5,Estimasi,True,"Decomposition: tauge, ketupat, tahu, bihun, bumbu kacang",53.8,Cukup
+ID-NU030,Karedok,Sayuran,Jawa Barat,makan_siang,120,5.5,6.5,1.2,12.0,4.5,180,360,65,38,88,1.5,Estimasi,True,Decomposition: sayuran mentah + bumbu kacang,56.0,Cukup
+ID-NU031,Pepes Ikan,"Ikan, Kerang & Udang",Jawa Barat,makan_siang,120,18.0,4.5,1.0,2.0,0.5,280,320,35,30,200,1.0,Estimasi,True,"Decomposition: ikan + bumbu, dibungkus daun pisang",48.7,Cukup
+ID-NU040,Coto Makassar,Daging & Unggas,Sulawesi Selatan,makan_siang,158,12.5,9.5,3.5,4.0,0.8,450,260,28,22,145,2.0,Estimasi,True,Decomposition: daging sapi + jeroan + bumbu,47.5,Cukup
+ID-NU041,Konro,Daging & Unggas,Sulawesi Selatan,makan_siang,175,14.0,11.5,4.5,3.5,0.5,420,240,25,20,165,2.4,Estimasi,True,Decomposition: iga sapi + bumbu hitam,46.6,Cukup
+ID-NU050,Saksang,Daging & Unggas,Sumatera Utara,makan_siang,195,16.0,12.5,4.5,4.5,1.0,380,280,22,24,155,2.5,Estimasi,True,Decomposition: daging + andaliman + bumbu,47.8,Cukup
+ID-NU051,Arsik Ikan Mas,"Ikan, Kerang & Udang",Sumatera Utara,makan_siang,130,17.0,5.5,1.2,2.5,0.8,320,340,38,32,220,1.2,Estimasi,True,Decomposition: ikan mas + andaliman + asam,49.6,Cukup
+ID-NU060,Tinutuan (Bubur Manado),Sayuran,Sulawesi Utara,sarapan,78,2.0,0.5,0.1,16.0,2.5,145,280,35,28,55,1.2,Estimasi,True,Decomposition: bubur + jagung + sayuran,50.3,Cukup
+ID-NU070,Papeda Ikan Kuah Kuning,"Ikan, Kerang & Udang",Papua,makan_siang,105,8.5,2.5,0.5,12.5,0.8,280,250,28,25,120,0.8,Estimasi,True,Decomposition: papeda sagu + ikan + kunyit,47.3,Cukup
+ID-NU080,Nasi Goreng,Serealia,Nasional,sarapan,195,5.5,6.5,1.5,28.0,1.2,480,130,18,20,75,1.0,USDA,True,USDA Indonesian fried rice,44.9,Cukup
+ID-NU081,Mie Goreng,Serealia,Nasional,makan_siang,215,6.5,8.0,2.0,30.0,1.5,520,140,22,25,95,1.5,USDA,True,USDA Indonesian fried noodles,45.7,Cukup
+ID-NU082,Bakso Sapi,Daging & Unggas,Nasional,makan_siang,115,9.0,6.0,2.5,6.5,0.8,580,175,22,18,110,1.4,Estimasi,True,Decomposition: bakso daging sapi + mie + kuah kaldu,45.5,Cukup
+ID-NU083,Ayam Goreng Lengkuas,Daging & Unggas,Nasional,makan_siang,215,22.0,13.0,3.5,2.5,0.5,380,230,18,22,175,1.4,Estimasi,True,"Decomposition: ayam + bumbu lengkuas, digoreng",46.0,Cukup
+ID-NU084,Tempe Goreng,Kacang & Biji,Nasional,lauk,200,17.0,10.5,1.5,12.0,5.5,95,295,145,75,220,2.5,USDA,True,"USDA Tempeh, fried",60.7,Baik
+ID-NU085,Tahu Bacem,Kacang & Biji,Jawa,lauk,165,14.0,8.0,1.2,9.0,2.0,320,175,285,38,165,2.0,Estimasi,True,Decomposition: tahu + kecap manis + bumbu bacem,62.7,Baik
+ID-NU086,Ikan Bakar Bumbu Kecap,"Ikan, Kerang & Udang",Nasional,makan_siang,145,22.0,5.0,1.0,3.5,0.5,320,380,25,32,245,1.0,Estimasi,True,"Decomposition: ikan kakap/nila + bumbu kecap, dibakar",49.2,Cukup
+ID-NU087,Capcay Sayur,Sayuran,Nasional,makan_siang,65,3.0,2.5,0.5,9.0,3.5,280,320,75,28,65,1.2,Estimasi,True,Decomposition: aneka sayuran + bawang putih,54.6,Cukup
+ID-NU088,Tumis Kangkung,Sayuran,Nasional,makan_siang,55,2.5,2.5,0.4,6.5,3.0,240,380,105,35,50,2.0,Estimasi,True,Decomposition: kangkung + bawang + saus,57.0,Cukup
+ID-NU089,Telur Balado,Telur,Nasional,lauk,175,11.0,12.0,3.0,5.5,1.5,380,195,55,18,165,1.8,Estimasi,True,Decomposition: telur + bumbu balado (cabai),48.7,Cukup
