@@ -68,7 +68,7 @@ def get_weekly_summary(user_id: str) -> dict:
 
     response = (
         supabase.table("consumption_logs")
-        .select("log_date, dash_score, sodium_mg, potassium_mg")
+        .select("log_date, dash_score, total_sodium_mg, total_potassium_mg")
         .eq("user_id", user_id)
         .gte("log_date", cutoff)
         .execute()
@@ -88,8 +88,10 @@ def get_weekly_summary(user_id: str) -> dict:
         }
 
     scores = [float(r["dash_score"]) for r in rows if r.get("dash_score") is not None]
-    sodiums = [float(r["sodium_mg"]) for r in rows if r.get("sodium_mg") is not None]
-    potassiums = [float(r["potassium_mg"]) for r in rows if r.get("potassium_mg") is not None]
+    sodiums = [float(r["total_sodium_mg"]) for r in rows if r.get("total_sodium_mg") is not None]
+    potassiums = [
+        float(r["total_potassium_mg"]) for r in rows if r.get("total_potassium_mg") is not None
+    ]
     unique_days = len({r["log_date"] for r in rows if r.get("log_date")})
 
     return {
