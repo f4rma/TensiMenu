@@ -35,6 +35,8 @@ class UserLoginResponse(BaseModel):
     email: str
     name: str | None = None
     access_token: str
+    refresh_token: str | None = None
+    expires_at: int | None = None  # Unix timestamp (detik) kapan access_token expired
     token_type: str = "bearer"
 
 
@@ -48,3 +50,10 @@ class PasswordResetRequest(BaseModel):
     """Request body untuk reset password."""
 
     email: EmailStr
+
+
+class PasswordResetConfirmRequest(BaseModel):
+    """Request body untuk konfirmasi reset password dengan token dari email."""
+
+    token: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=8, max_length=128)
