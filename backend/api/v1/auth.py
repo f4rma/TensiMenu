@@ -10,11 +10,12 @@ POST /api/v1/auth/reset-password — kirim email reset
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Request, Response, status
 
 from core.database import get_supabase
 from core.rate_limiter import limiter
 from models.user import (
+    PasswordResetConfirmRequest,
     PasswordResetRequest,
     TokenRefreshRequest,
     UserLoginRequest,
@@ -39,7 +40,9 @@ _INVALID_CREDENTIALS_CODE = "INVALID_CREDENTIALS"
     summary="Registrasi pengguna baru",
 )
 @limiter.limit("10/minute")
-async def register(request: Request, body: UserRegisterRequest) -> UserRegisterResponse:
+async def register(
+    request: Request, response: Response, body: UserRegisterRequest
+) -> UserRegisterResponse:
     """
     Buat akun pengguna baru via Supabase Auth.
 
@@ -51,7 +54,16 @@ async def register(request: Request, body: UserRegisterRequest) -> UserRegisterR
 
     try:
         response = supabase.auth.sign_up(
-            {"email": body.email, "password": body.password}
+            {
+                "email": body.email,
+                "password": body.password,
+                "options": {
+                    "data": {
+                        "full_name": body.full_name,
+                        "name": body.full_name,
+                    }
+                },
+            }
         )
     except Exception as exc:
         error_msg = str(exc).lower()
@@ -91,7 +103,9 @@ async def register(request: Request, body: UserRegisterRequest) -> UserRegisterR
     summary="Login email/password",
 )
 @limiter.limit("20/minute")
-async def login(request: Request, body: UserLoginRequest) -> UserLoginResponse:
+async def login(
+    request: Request, response: Response, body: UserLoginRequest
+) -> UserLoginResponse:
     """
     Login dengan email dan password via Supabase Auth.
     Blokir IP selama 15 menit setelah 5 kegagalan dalam 10 menit.
@@ -153,6 +167,8 @@ async def login(request: Request, body: UserLoginRequest) -> UserLoginResponse:
         email=user.email or body.email,
         name=name,
         access_token=session.access_token,
+        refresh_token=session.refresh_token,
+        expires_at=session.expires_at,
     )
 
 
@@ -211,6 +227,8 @@ async def refresh_token(body: TokenRefreshRequest) -> UserLoginResponse:
         email=user.email or "",
         name=name,
         access_token=session.access_token,
+        refresh_token=session.refresh_token,
+        expires_at=session.expires_at,
     )
 
 
@@ -220,7 +238,9 @@ async def refresh_token(body: TokenRefreshRequest) -> UserLoginResponse:
     summary="Kirim email reset password",
 )
 @limiter.limit("5/minute")
-async def reset_password(request: Request, body: PasswordResetRequest) -> None:
+async def reset_password(
+    request: Request, response: Response, body: PasswordResetRequest
+) -> None:
     """
     Kirim email reset password ke alamat yang diberikan.
     Link reset kedaluwarsa dalam 60 menit.
@@ -233,3 +253,61 @@ async def reset_password(request: Request, body: PasswordResetRequest) -> None:
     except Exception as exc:
         # Log tapi jangan ekspos ke client
         logger.warning("Reset password error untuk %s: %s", body.email, str(exc))
+
+
+@router.post(
+    "/reset-password/confirm",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Konfirmasi reset password dengan token",
+)
+@limiter.limit("5/minute")
+async def reset_password_confirm(
+    request: Request, response: Response, body: PasswordResetConfirmRequest
+) -> None:
+    """
+    Konfirmasi kata sandi baru menggunakan token dari email reset.
+
+    - Token didapat dari URL ?token=... saat user klik link di email reset.
+    - Token Supabase reset password berlaku 60 menit (Req. 1.8).
+
+    HTTP 204: kata sandi berhasil diubah.
+    HTTP 401: token tidak valid atau kedaluwarsa.
+    """
+    supabase = get_supabase()
+
+    try:
+        verify_response = supabase.auth.verify_otp(
+            {"token_hash": body.token, "type": "recovery"}
+        )
+    except Exception as exc:
+        logger.warning("Token reset tidak valid: %s", str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": "Tautan reset tidak valid atau sudah kedaluwarsa.",
+                "code": "INVALID_RESET_TOKEN",
+            },
+        )
+
+    if verify_response.session is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": "Tautan reset tidak valid atau sudah kedaluwarsa.",
+                "code": "INVALID_RESET_TOKEN",
+            },
+        )
+
+    try:
+        # Update password menggunakan session yang baru diverifikasi
+        supabase.auth.update_user({"password": body.new_password})
+        logger.info("Kata sandi berhasil direset.")
+    except Exception as exc:
+        logger.error("Gagal update password: %s", str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": "Gagal mengubah kata sandi. Silakan coba lagi.",
+                "code": "PASSWORD_UPDATE_FAILED",
+            },
+        )
