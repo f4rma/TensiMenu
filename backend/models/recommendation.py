@@ -51,6 +51,25 @@ class FoodItemRecommended(BaseModel):
     dash_category: Optional[str] = None
     is_repeated: bool = False  # True jika fallback anti-repetisi
 
+    # Informasi tambahan untuk display di UI
+    region: Optional[str] = None
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    is_estimated: bool = False  # True untuk masakan olahan dengan estimasi nutrisi
+
+    # Nutrisi per 100 gram (ditampilkan di kartu rekomendasi)
+    energy_kcal: float = 0.0
+    sodium_mg: float = 0.0
+    potassium_mg: float = 0.0
+    fiber_g: float = 0.0
+    fat_total_g: float = 0.0
+    phosphorus_mg: float = 0.0
+
+    # Porsi default untuk kategori ini (gram per 1 sajian standar). Frontend
+    # memakai ini saat membangun payload /confirm supaya kalori/natrium yang
+    # dicatat realistis (mis. ikan 50 g, bukan flat 100 g).
+    default_serving_g: float = 100.0
+
 
 class MealPlanResponse(BaseModel):
     """Rencana makan harian yang dihasilkan oleh CBF pipeline."""

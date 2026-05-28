@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from core.database import get_supabase
 from core.security import TokenPayload, get_current_user
 from models.profile import UserProfileCreate, UserProfileResponse, UserProfileUpdate
+from services.bp_resolver import get_representative_systolic
 from services.nutrition_calculator import calculate_personal_targets
 
 logger = logging.getLogger(__name__)
@@ -32,6 +33,7 @@ def _build_profile_response(row: dict) -> UserProfileResponse:
         height_cm=float(row["height_cm"]),
         systolic_bp=row.get("systolic_bp"),
         diastolic_bp=row.get("diastolic_bp"),
+        activity_level=row.get("activity_level") or "light",
         comorbidities=row.get("comorbidities") or [],
         food_restrictions=row.get("food_restrictions") or [],
         regional_prefs=row.get("regional_prefs") or [],
@@ -62,11 +64,11 @@ async def get_profile(
         supabase.table("user_profiles")
         .select("*")
         .eq("user_id", current_user.sub)
-        .single()
+        .maybe_single()
         .execute()
     )
 
-    if not response.data:
+    if not response or not response.data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"error": "Profil belum dibuat.", "code": "PROFILE_NOT_FOUND"},
@@ -108,13 +110,18 @@ async def create_profile(
         )
 
     # Hitung target nutrisi personal
+    representative_systolic = get_representative_systolic(
+        user_id=current_user.sub,
+        profile_systolic=body.systolic_bp,
+    )
     daily_targets = calculate_personal_targets(
         gender=body.gender,
         weight_kg=body.weight_kg,
         height_cm=body.height_cm,
         age=body.age,
         comorbidities=body.comorbidities,
-        systolic_bp=body.systolic_bp,
+        systolic_bp=representative_systolic,
+        activity_level=body.activity_level,
     )
 
     now = datetime.now(timezone.utc).isoformat()
@@ -127,6 +134,7 @@ async def create_profile(
         "height_cm": body.height_cm,
         "systolic_bp": body.systolic_bp,
         "diastolic_bp": body.diastolic_bp,
+        "activity_level": body.activity_level,
         "comorbidities": body.comorbidities,
         "food_restrictions": body.food_restrictions,
         "regional_prefs": body.regional_prefs,
@@ -170,11 +178,11 @@ async def update_profile(
         supabase.table("user_profiles")
         .select("*")
         .eq("user_id", current_user.sub)
-        .single()
+        .maybe_single()
         .execute()
     )
 
-    if not existing_resp.data:
+    if not existing_resp or not existing_resp.data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"error": "Profil belum dibuat. Gunakan POST untuk membuat.", "code": "PROFILE_NOT_FOUND"},
@@ -188,7 +196,21 @@ async def update_profile(
     merged_height = body.height_cm or existing["height_cm"]
     merged_age = body.age or existing["age"]
     merged_comorbidities = body.comorbidities if body.comorbidities is not None else (existing.get("comorbidities") or [])
-    merged_systolic = body.systolic_bp if body.systolic_bp is not None else existing.get("systolic_bp")
+    merged_systolic_input = (
+        body.systolic_bp if body.systolic_bp is not None else existing.get("systolic_bp")
+    )
+    merged_activity = (
+        body.activity_level
+        if body.activity_level is not None
+        else existing.get("activity_level") or "light"
+    )
+
+    # Sumber sistolik: rata-rata dari blood_pressure_records terbaru, fallback
+    # ke profile.systolic_bp (data onboarding).
+    representative_systolic = get_representative_systolic(
+        user_id=current_user.sub,
+        profile_systolic=merged_systolic_input,
+    )
 
     # Recalculate target nutrisi
     daily_targets = calculate_personal_targets(
@@ -197,11 +219,18 @@ async def update_profile(
         height_cm=merged_height,
         age=merged_age,
         comorbidities=merged_comorbidities,
-        systolic_bp=merged_systolic,
+        systolic_bp=representative_systolic,
+        activity_level=merged_activity,
     )
 
     # Bangun payload update (hanya field yang dikirim)
-    update_payload: dict = {"daily_targets": daily_targets, "updated_at": datetime.now(timezone.utc).isoformat()}
+    update_payload: dict = {
+        "daily_targets": daily_targets,
+        # Wizard yang submit selalu representasi "profil lengkap" — pastikan
+        # is_complete True meskipun row sebelumnya masih false.
+        "is_complete": True,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
     if body.full_name is not None:
         update_payload["full_name"] = body.full_name
     if body.age is not None:
@@ -216,6 +245,8 @@ async def update_profile(
         update_payload["systolic_bp"] = body.systolic_bp
     if body.diastolic_bp is not None:
         update_payload["diastolic_bp"] = body.diastolic_bp
+    if body.activity_level is not None:
+        update_payload["activity_level"] = body.activity_level
     if body.comorbidities is not None:
         update_payload["comorbidities"] = body.comorbidities
     if body.food_restrictions is not None:
