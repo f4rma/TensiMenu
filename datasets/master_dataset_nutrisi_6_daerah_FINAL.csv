@@ -1,17 +1,17 @@
-DAERAH	KATEGORI_MAKANAN	NAMA_BAHAN	BASIS_BERAT_g	ENERGI_kal	PROTEIN_g	LEMAK_g	KH_g	SERAT_g	NATRIUM_mg	KALIUM_mg	RASIO_NA_K	MAGNESIUM_mg_USDA	LEMAK_JENUH_g_USDA	STATUS_DATA
-Minang	Lauk Hewani	Rendang sapi, masakan	100	193	22,6	11,2	5,4	0	480	310	1,55	23	6,8	Tersedia di USDA
-Minang	Lauk Hewani	Soto padang, masakan	100	127	5,9	8,1	6	0,2	520	145	3,59	14	2,1	Tersedia di USDA
-Jawa	Sayuran	Gudeg, sayur	100	160	3,3	9,5	16,2	2,8	310	190	1,63	18	1,5	Tersedia di USDA
-Jawa	Lauk Hewani	Rawon, masakan	100	60	13,5	3,8	1,5	0	490	210	2,33	20	4,2	Tersedia di USDA
-Jawa	Lauk Hewani	Soto kudus, masakan	100	38	2,6	2,1	2,3	0,1	410	120	3,42	12	1,1	Tersedia di USDA
-Sunda	Sayuran	Karedok, sayur	100	92	2,2	4,5	11,4	3,1	280	340	0,82	28	0,8	Tersedia di USDA
-Sunda	Lauk Hewani	Ayam goreng pasundan	100	240	25	14,2	0	0	390	260	1,5	25	1,3	Tersedia di USDA
-Bugis	Lauk Hewani	Coto mangkasara, sapi, masakan	100	84	14,2	4,1	2	0	550	185	2,97	19	3,5	Tersedia di USDA
-Papua	Karbohidrat	Papeda	100	61	0,2	0,1	14,9	0,4	10	15	0,67	3	0	Tersedia di USDA
-Minang	Lauk Hewani	Sate Padang	100	215	16,8	11,5	12,1	0,5	460	220	2,09	22	4,5	Estimasi Komposisi USDA
-Minang	Lauk Hewani	Gulai Tambusu	100	285	14,5	22,1	5,8	0,4	510	160	3,19	16	7,2	Estimasi Komposisi USDA
-Jawa	Lauk Nabati	Tahu Tek	100	175	8,4	9,2	15,3	1,8	340	210	1,62	35	1,2	Estimasi Komposisi USDA
-Sunda	Sayuran	Sayur Asem Sunda	100	46	2,6	0,8	8,2	1,9	290	230	1,26	21	0,3	Estimasi Komposisi USDA
-Batak	Lauk Hewani	Arsik Ikan Mas	100	154	18,2	7,5	2,1	0,6	320	290	1,1	29	1,1	Estimasi Komposisi USDA
-Bugis	Karbohidrat	Kapurung	100	112	5,2	2,4	18,1	1,2	210	175	1,2	15	0,4	Estimasi Komposisi USDA
-Papua	Lauk Hewani	Ikan Kuah Kuning	100	124	16,5	5,1	3	0,3	380	310	1,23	32	0,9	Estimasi Komposisi USDA
+DAERAH;KATEGORI_MAKANAN;NAMA_BAHAN;BASIS_BERAT_g;ENERGI_kal;PROTEIN_g;LEMAK_g;KH_g;SERAT_g;NATRIUM_mg;KALIUM_mg;RASIO_NA_K;MAGNESIUM_mg_USDA;LEMAK_JENUH_g_USDA;STATUS_DATA
+Minang;Lauk Hewani;Rendang sapi, masakan;100;193;22,6;11,2;5,4;0;480;310;1,55;23;6,8;Tersedia di USDA
+Minang;Lauk Hewani;Soto padang, masakan;100;127;5,9;8,1;6;0,2;520;145;3,59;14;2,1;Tersedia di USDA
+Jawa;Sayuran;Gudeg, sayur;100;160;3,3;9,5;16,2;2,8;310;190;1,63;18;1,5;Tersedia di USDA
+Jawa;Lauk Hewani;Rawon, masakan;100;60;13,5;3,8;1,5;0;490;210;2,33;20;4,2;Tersedia di USDA
+Jawa;Lauk Hewani;Soto kudus, masakan;100;38;2,6;2,1;2,3;0,1;410;120;3,42;12;1,1;Tersedia di USDA
+Sunda;Sayuran;Karedok, sayur;100;92;2,2;4,5;11,4;3,1;280;340;0,82;28;0,8;Tersedia di USDA
+Sunda;Lauk Hewani;Ayam goreng pasundan;100;240;25;14,2;0;0;390;260;1,5;25;1,3;Tersedia di USDA
+Bugis;Lauk Hewani;Coto mangkasara, sapi, masakan;100;84;14,2;4,1;2;0;550;185;2,97;19;3,5;Tersedia di USDA
+Papua;Karbohidrat;Papeda;100;61;0,2;0,1;14,9;0,4;10;15;0,67;3;0;Tersedia di USDA
+Minang;Lauk Hewani;Sate Padang;100;215;16,8;11,5;12,1;0,5;460;220;2,09;22;4,5;Estimasi Komposisi USDA
+Minang;Lauk Hewani;Gulai Tambusu;100;285;14,5;22,1;5,8;0,4;510;160;3,19;16;7,2;Estimasi Komposisi USDA
+Jawa;Lauk Nabati;Tahu Tek;100;175;8,4;9,2;15,3;1,8;340;210;1,62;35;1,2;Estimasi Komposisi USDA
+Sunda;Sayuran;Sayur Asem Sunda;100;46;2,6;0,8;8,2;1,9;290;230;1,26;21;0,3;Estimasi Komposisi USDA
+Batak;Lauk Hewani;Arsik Ikan Mas;100;154;18,2;7,5;2,1;0,6;320;290;1,1;29;1,1;Estimasi Komposisi USDA
+Bugis;Karbohidrat;Kapurung;100;112;5,2;2,4;18,1;1,2;210;175;1,2;15;0,4;Estimasi Komposisi USDA
+Papua;Lauk Hewani;Ikan Kuah Kuning;100;124;16,5;5,1;3;0,3;380;310;1,23;32;0,9;Estimasi Komposisi USDA
