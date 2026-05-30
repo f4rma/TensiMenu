@@ -3,19 +3,145 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Brand tokens — single source of truth */
+  --brand-primary: #2b7c61;
+  --brand-primary-dark: #1f5e48;
+  --brand-primary-light: #3d9a7c;
+  --brand-cream: #fff7e8;
+  --brand-cream-soft: #fffcf5;
+  --brand-charcoal: #3d3d3d;
+  --brand-charcoal-soft: #5a5a5a;
+  --brand-charcoal-muted: #8a8a8a;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Aliases */
+  --background: var(--brand-cream);
+  --foreground: var(--brand-charcoal);
+  --card: #ffffff;
+  --card-foreground: var(--brand-charcoal);
+  --primary: var(--brand-primary);
+  --primary-foreground: #ffffff;
+  --muted: var(--brand-cream-soft);
+  --muted-foreground: var(--brand-charcoal-muted);
+  --border: rgba(61, 61, 61, 0.08);
+  --ring: var(--brand-primary);
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
+<<<<<<< Updated upstream
+  font-family: Arial, Helvetica, sans-serif;
+=======
   font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar — warm subtle */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(61, 61, 61, 0.15);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(61, 61, 61, 0.25);
+}
+
+/* Tabular numbers for data display */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Animation utilities */
+@layer utilities {
+  .animate-in {
+    animation-fill-mode: both;
+  }
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  .slide-in-from-bottom-2 {
+    animation: slideInFromBottom2 0.3s ease-out;
+  }
+  .slide-in-from-bottom-3 {
+    animation: slideInFromBottom3 0.3s ease-out;
+  }
+  .slide-in-from-bottom-4 {
+    animation: slideInFromBottom4 0.4s ease-out;
+  }
+  .slide-in-from-right-5 {
+    animation: slideInFromRight5 0.3s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes slideInFromBottom2 {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes slideInFromBottom3 {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes slideInFromBottom4 {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes slideInFromRight5 {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+>>>>>>> Stashed changes
 }
