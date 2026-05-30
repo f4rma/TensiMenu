@@ -1,0 +1,52 @@
+{
+  "version": "1.1.0",
+  "trained_at": "2026-05-27T11:33:45.999202+00:00",
+  "random_state": 42,
+  "n_items": 822,
+  "n_features": 5,
+  "features": [
+    "sodium_mg",
+    "potassium_mg",
+    "calcium_mg",
+    "fiber_g",
+    "fat_total_g"
+  ],
+  "nutrient_weights": {
+    "sodium_mg": {
+      "direction": "lower",
+      "weight": 0.3
+    },
+    "potassium_mg": {
+      "direction": "higher",
+      "weight": 0.25
+    },
+    "calcium_mg": {
+      "direction": "higher",
+      "weight": 0.2
+    },
+    "fiber_g": {
+      "direction": "higher",
+      "weight": 0.15
+    },
+    "fat_total_g": {
+      "direction": "lower",
+      "weight": 0.1
+    }
+  },
+  "scaler_mean": [
+    46.888771289537715,
+    73.25766423357663,
+    61.795133819951346,
+    5.0249391727493915,
+    5.915693430656935
+  ],
+  "scaler_scale": [
+    314.9792278600026,
+    182.63049298188673,
+    117.32959979683618,
+    16.8703543212141,
+    9.31595624833313
+  ],
+  "datasets": {
+    "TKPI_2017": {
+      "n_items": 
