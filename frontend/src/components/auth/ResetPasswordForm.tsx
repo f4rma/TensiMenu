@@ -182,12 +182,12 @@ export default function ResetPasswordForm() {
 
       <p className="mt-6 text-center text-sm text-brand-charcoal-soft">
         Butuh bantuan?{" "}
-        <Link
-          href="#support"
+        <a
+          href="mailto:hello@tensimenu.id"
           className="font-semibold text-brand-primary underline-offset-4 transition-colors duration-150 hover:text-brand-primary-dark hover:underline"
         >
           Hubungi Dukungan
-        </Link>
+        </a>
       </p>
     </div>
   );

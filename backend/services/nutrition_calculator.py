@@ -8,6 +8,8 @@ Rujukan:
 - Mifflin-St Jeor 1990: standar BMR untuk dewasa.
 - WHO/FAO/UNU 2004: PAL ringan 1.40-1.69, sedang 1.70-1.99, berat ≥2.0.
 - DRI IOM/NAM 2005: serat dewasa <50 thn (38 g M / 25 g F), >50 thn (30 g M / 21 g F).
+- DRI NASEM 2019: kalium AI laki-laki 3400 mg, perempuan 2600 mg
+  (merevisi turun angka lama 4700 mg dari DRI 2005).
 - DASH-Sodium trial (NEJM 2001) dan AHA 2017: 1500 mg Na untuk hipertensi.
 - KDIGO 2020: CKD G3-G4 non-dialisis, Na ≤2000 mg, K ≤2000-3000 mg, P 800-1000 mg.
 """
@@ -111,10 +113,17 @@ def calculate_personal_targets(
     else:
         fiber_target = 25.0 if age <= 50 else 21.0
 
+    # Kalium: DRI NASEM 2019 Adequate Intake (AI), dibedakan gender.
+    # Catatan: angka lama 4700 mg (DRI 2005) telah DIREVISI TURUN oleh NASEM
+    # 2019 karena bukti pendukungnya tidak cukup kuat.
+    #   - Laki-laki dewasa (19+): 3400 mg
+    #   - Perempuan dewasa (19+): 2600 mg
+    potassium_target = 3400.0 if gender == "laki-laki" else 2600.0
+
     # Target dasar DASH (untuk dewasa sehat)
     targets = {
         "sodium_mg": 2300.0,
-        "potassium_mg": 4000.0,
+        "potassium_mg": potassium_target,
         "calcium_mg": 1200.0 if age > 50 else 1000.0,
         "fiber_g": fiber_target,
         # Lemak dari TDEE (bukan BMR), 9 kkal/g

@@ -12,6 +12,7 @@ import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 
 from ml.feature_engineering import DASH_FEATURES, build_user_nutrition_vector
+from ml.dietary_filter import apply_dietary_restrictions
 from ml.model_loader import ModelArtifacts
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,7 @@ def recommend(
     category_filter: Optional[str] = None,
     exclude_ids: Optional[list[str]] = None,
     comorbidities: Optional[list[str]] = None,
+    food_restrictions: Optional[list[str]] = None,
     similarity_weight: float = 0.4,
     dash_weight: float = 0.6,
 ) -> pd.DataFrame:
@@ -50,6 +52,7 @@ def recommend(
         category_filter: filter kategori TKPI (misal 'Sayuran')
         exclude_ids: food_code yang dikecualikan (anti-repetisi 3 hari)
         comorbidities: list komorbid pengguna untuk filter keamanan
+        food_restrictions: list pantangan/preferensi (vegan, alergi, dll)
         similarity_weight: bobot similarity (default 0.4)
         dash_weight: bobot DASH score (default 0.6)
 
@@ -75,6 +78,9 @@ def recommend(
         if "glycemic_index" in df.columns:
             df = df[(df["glycemic_index"].isna()) | (df["glycemic_index"] < 55)]
 
+    # --- Filter pantangan & preferensi makanan (vegan, alergi, dll) ---
+    df = apply_dietary_restrictions(df, food_restrictions)
+
     # Filter kategori
     if category_filter and "category" in df.columns:
         df = df[df["category"] == category_filter]
@@ -88,35 +94,28 @@ def recommend(
         return pd.DataFrame(columns=["food_code", "name", "category", "similarity", "dash_score"])
 
     # --- Cosine similarity ---
-    # Ambil indeks item yang lolos filter dari item_matrix asli
-    # (item_matrix dibangun dari food_df asli, urutan sama)
-    original_indices = df.index.tolist()
-
-    # Subset item_matrix sesuai indeks yang lolos filter
-    # Perlu mapping: food_code → index di artifacts.food_ids
+    # Mapping food_code → index di artifacts.item_matrix.
     food_code_to_idx = {fid: i for i, fid in enumerate(artifacts.food_ids)}
-    valid_indices = [
-        food_code_to_idx[fc]
-        for fc in df["food_code"].tolist()
-        if fc in food_code_to_idx
-    ]
 
-    if not valid_indices:
+    # Pertahankan HANYA baris yang food_code-nya ada di artifacts, lalu reset
+    # index. Kritis: valid_indices dibangun dari df yang SUDAH difilter ini,
+    # sehagga urutan similarities dijamin sejajar dengan baris df.
+    df = df[df["food_code"].isin(food_code_to_idx)].copy().reset_index(drop=True)
+
+    if df.empty:
         logger.warning("Tidak ada food_code yang cocok dengan artefak model.")
         return pd.DataFrame(columns=["food_code", "name", "category", "similarity", "dash_score"])
 
+    valid_indices = [food_code_to_idx[fc] for fc in df["food_code"].tolist()]
     item_matrix_filtered = artifacts.item_matrix[valid_indices]
 
     # Transform user vector
     user_vec = build_user_nutrition_vector(user_targets)
     user_vec_scaled = artifacts.scaler.transform(user_vec.reshape(1, -1))
 
-    # Hitung similarity
+    # Hitung similarity — urutan sejajar dengan df karena valid_indices
+    # dibangun dari df yang sama.
     similarities = cosine_similarity(user_vec_scaled, item_matrix_filtered)[0]
-
-    # Assign similarity ke DataFrame
-    df = df[df["food_code"].isin(artifacts.food_ids)].copy()
-    df = df.reset_index(drop=True)
     df["similarity"] = similarities
 
     # Composite ranking: gabung similarity + DASH score (jika tersedia)
@@ -154,6 +153,7 @@ def get_alternatives(
     user_targets: dict,
     top_k: int = 5,
     comorbidities: Optional[list[str]] = None,
+    food_restrictions: Optional[list[str]] = None,
 ) -> pd.DataFrame:
     """
     Dapatkan alternatif untuk satu item makanan.
@@ -178,4 +178,5 @@ def get_alternatives(
         category_filter=category,
         exclude_ids=[food_code],
         comorbidities=comorbidities,
+        food_restrictions=food_restrictions,
     )

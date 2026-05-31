@@ -14,13 +14,25 @@ build/
 venv/
 
 # ML artifacts
+# Catatan: kita ignore .pkl/.npy secara umum (model eksperimen di notebooks),
+# TAPI artefak produksi di backend/ml/artifacts WAJIB ikut repo agar backend
+# bisa load model saat deploy. Dikecualikan secara eksplisit di bawah.
 *.pkl
 *.npy
 notebooks/artifacts/
+!backend/ml/artifacts/scaler.pkl
+!backend/ml/artifacts/item_matrix.npy
 
 # Node
 node_modules/
 .next/
 
-# Kiro specs
+# specs
 .kiro/specs/tensimenu/
+.kiro/steering/
+
+docs/
+
+# Folder kerja upload gambar (jangan commit foto/asset besar)
+backend/food_images_input/
+backend/.hypothesis/

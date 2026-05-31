@@ -70,20 +70,12 @@ export default function CenteredAuthLayout({
               </Link>
             </li>
             <li>
-              <Link
-                href="/accessibility"
-                className="transition-colors duration-150 hover:text-brand-primary"
-              >
-                Accessibility Statement
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="#support"
+              <a
+                href="mailto:hello@tensimenu.id"
                 className="transition-colors duration-150 hover:text-brand-primary"
               >
                 Contact Support
-              </Link>
+              </a>
             </li>
           </ul>
         </div>

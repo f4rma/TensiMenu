@@ -1,0 +1,8 @@
+Zat Gizi Target;Tersedia di CSV Anda;Nama Kolom (Jika Ada);Status Checklist
+Energi;TRUE;ENERGI_kal;Tersedia (Sesuai)
+Serat;TRUE;SERAT_g;Tersedia (Sesuai)
+Kalsium;TRUE;KALSIUM_mg;Tersedia (Sesuai)
+Natrium;TRUE;NATRIUM_mg;Tersedia (Sesuai)
+Kalium;TRUE;KALIUM_mg;Tersedia (Sesuai)
+Magnesium;FALSE;-;Tidak Ada (Harus Dicari dari USDA/Nutrisurvey)
+Lemak Jenuh;FALSE;-;Tidak Ada (Harus Dicari dari USDA/Nutrisurvey)

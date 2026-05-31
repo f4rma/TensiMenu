@@ -1,0 +1,26 @@
+Column1;Column2;Column3;Column4;Column5;Column6
+Daerah;Nama Makanan Lokal;Status di TKPI;Kode TKPI;Kandidat Data Estimasi;Catatan
+Minang;Rendang sapi, masakan;Tersedia;FP062;Tidak;Sudah tersedia di dataset TKPI
+Minang;Soto padang, masakan;Tersedia;FP080;Tidak;Sudah tersedia di dataset TKPI
+Minang;Sate Padang;Tidak Tersedia;-;Ya;Estimasi dari daging sapi, bumbu rempah, dan tepung beras
+Minang;Gulai Tambusu;Tidak Tersedia;-;Ya;Estimasi dari usus sapi, telur, dan santan kental
+Jawa;Gudeg, sayur;Tersedia;DP032;Tidak;Sudah tersedia di dataset TKPI
+Jawa;Rawon, masakan;Tersedia;FP061;Tidak;Sudah tersedia di dataset TKPI
+Jawa;Soto kudus, masakan;Tersedia;FP078;Tidak;Sudah tersedia di dataset TKPI
+Jawa;Tahu Tek;Tidak Tersedia;-;Ya;Estimasi dari tahu, lontong, tauge, telur, dan saus petis
+Sunda;Karedok, sayur;Tersedia;DP037;Tidak;Sudah tersedia di dataset TKPI
+Sunda;Ayam goreng pasundan;Tersedia;FP029;Tidak;Sudah tersedia di dataset TKPI
+Sunda;Sayur Asem Sunda;Tidak Tersedia;-;Ya;Estimasi dari kacang tanah, melinjo, jagung, dan labu siam
+Sunda;Tutug Oncom;Tidak Tersedia;-;Ya;Estimasi dari nasi putih dan oncom panggang bumbu
+Batak;Arsik Ikan Mas;Tidak Tersedia;-;Ya;Estimasi dari ikan mas, andaliman, kecombrang, bumbu kuning
+Batak;Saksang;Tidak Tersedia;-;Ya;Estimasi dari daging (sapi/babi), darah/rempah, andaliman
+Batak;Na Tinombur;Tidak Tersedia;-;Ya;Estimasi dari ikan bakar dengan bumbu siram khas
+Batak;Mie Gomak;Tidak Tersedia;-;Ya;Estimasi dari mie lidi, santan, andaliman, dan sayuran
+Bugis;Coto mangkasara, sapi, masakan;Tersedia;FP044;Tidak;Sudah tersedia di dataset TKPI
+Bugis;Sup Konro;Tidak Tersedia;-;Ya;Estimasi dari iga sapi dan kuah rempah kluwek
+Bugis;Pallubasa;Tidak Tersedia;-;Ya;Estimasi dari daging sapi, jeroan, dan kelapa sangrai
+Bugis;Kapurung;Tidak Tersedia;-;Ya;Estimasi dari sagu basah, sayuran, dan ikan/udang
+Papua;Papeda;Tersedia;BP054;Tidak;Sudah tersedia di dataset TKPI
+Papua;Ikan Kuah Kuning;Tidak Tersedia;-;Ya;Estimasi dari ikan tongkol/mubara, kunyit, kemiri, daun kemangi
+Papua;Sagu Sep;Tidak Tersedia;-;Ya;Estimasi dari sagu, kelapa parut, dan daging/ikan
+Papua;Keladi Tumbuk;Tidak Tersedia;-;Ya;Estimasi dari keladi/talas kukus yang ditumbuk halus

@@ -15,6 +15,7 @@ from services.progress_service import (
     check_reminder_needed,
     get_compliance_percentage,
     get_progress_trend,
+    get_tracker_data,
     get_weekly_summary,
 )
 
@@ -78,6 +79,23 @@ async def get_trend(
 
 
 @router.get(
+    "/tracker",
+    summary="Data lengkap untuk halaman Tracker (period-aware)",
+)
+async def get_tracker(
+    period: int = Query(7, description="Periode dalam hari: 7, 30, atau 90"),
+    current_user: TokenPayload = Depends(get_current_user),
+) -> dict:
+    """
+    Kembalikan agregasi lengkap untuk halaman Tracker sesuai periode:
+    tren skor harian, kepatuhan, ringkasan, heatmap nutrisi, dan streak.
+    """
+    if period not in (7, 30, 90):
+        period = 7
+    return get_tracker_data(current_user.sub, period_days=period)
+
+
+@router.get(
     "/weekly-summary",
     summary="Ringkasan mingguan DASH Score",
 )
@@ -102,13 +120,15 @@ async def get_today_progress(
     """
     Kembalikan konsumsi nutrisi hari ini berdasarkan consumption_logs.
     Dipakai oleh halaman Rekomendasi & Beranda untuk menampilkan
-    progress bar nutrisi (Kalori, Natrium, Kalium, Serat).
+    progress bar nutrisi (Kalori, Natrium, Kalium, Serat) dan daftar
+    makanan yang sudah dicatat hari ini.
 
     Returns:
         - has_data: bool — apakah user sudah catat makanan hari ini
         - dash_score: float — DASH score harian
         - consumption: dict — total nutrisi yang sudah dikonsumsi
         - meals_logged: int — jumlah makanan yang dicatat
+        - items: list — daftar makanan {food_code, name, category, serving_g}
     """
     from datetime import date
     from core.database import get_supabase
@@ -137,10 +157,14 @@ async def get_today_progress(
                 "fat_total_g": 0,
             },
             "meals_logged": 0,
+            "items": [],
         }
 
     row = response.data[0]
     food_codes = row.get("food_codes") or []
+    servings = row.get("servings_g") or []
+
+    items = _resolve_consumed_items(food_codes, servings)
 
     return {
         "has_data": True,
@@ -154,4 +178,62 @@ async def get_today_progress(
             "fat_total_g": round(float(row.get("total_fat_total_g", 0)), 1),
         },
         "meals_logged": len(food_codes) if isinstance(food_codes, list) else 0,
+        "items": items,
     }
+
+
+def _resolve_consumed_items(
+    food_codes: list[str], servings: list[float]
+) -> list[dict]:
+    """
+    Resolusi food_code → nama + kategori + image dari dataset.
+    Dipakai untuk menampilkan daftar "Sudah dimakan hari ini".
+
+    Mengelompokkan item yang sama (mis. Nasi 2x) menjadi satu baris
+    dengan jumlah porsi total.
+    """
+    if not food_codes:
+        return []
+
+    from pathlib import Path
+    import pandas as pd
+    from core.config import get_settings
+
+    settings = get_settings()
+    csv_path = Path(settings.ML_ARTIFACTS_PATH) / "food_items_clean.csv"
+    if not csv_path.exists():
+        return []
+
+    df = pd.read_csv(csv_path)
+    lookup = df.set_index(df["food_code"].astype(str)).to_dict("index")
+
+    # Pad servings agar sama panjang dengan food_codes
+    if len(servings) < len(food_codes):
+        servings = list(servings) + [100.0] * (len(food_codes) - len(servings))
+
+    # Agregasi item yang sama
+    agg: dict[str, dict] = {}
+    for code, serving_g in zip(food_codes, servings):
+        code = str(code)
+        meta = lookup.get(code)
+        if meta is None:
+            continue
+        if code not in agg:
+            image_val = meta.get("image_url")
+            image_url = (
+                str(image_val).strip()
+                if isinstance(image_val, str) and str(image_val).startswith("http")
+                else None
+            )
+            agg[code] = {
+                "food_code": code,
+                "name": str(meta.get("name", "")),
+                "category": str(meta.get("category", "")),
+                "image_url": image_url,
+                "serving_g": 0.0,
+                "count": 0,
+            }
+        agg[code]["serving_g"] += float(serving_g or 0)
+        agg[code]["count"] += 1
+
+    return list(agg.values())

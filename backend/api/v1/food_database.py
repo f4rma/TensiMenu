@@ -109,11 +109,11 @@ async def get_food(
         supabase.table("food_items")
         .select("*")
         .eq("food_code", food_code)
-        .single()
+        .maybe_single()
         .execute()
     )
 
-    if not response.data:
+    if not response or not response.data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"error": f"Makanan '{food_code}' tidak ditemukan.", "code": "FOOD_NOT_FOUND"},
@@ -193,11 +193,11 @@ async def update_food(
         supabase.table("food_items")
         .select("*")
         .eq("food_code", food_code)
-        .single()
+        .maybe_single()
         .execute()
     )
 
-    if not existing_resp.data:
+    if not existing_resp or not existing_resp.data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"error": f"Makanan '{food_code}' tidak ditemukan.", "code": "FOOD_NOT_FOUND"},
@@ -242,3 +242,107 @@ async def update_food(
 
     logger.info("Item makanan diperbarui: %s oleh %s", food_code, current_user.sub)
     return _row_to_food_item(update_resp.data[0])
+
+
+
+@router.get(
+    "/search/query",
+    summary="Pencarian makanan dari dataset CSV (lightweight)",
+)
+async def search_foods(
+    q: str = Query(..., min_length=1, max_length=100, description="Kata kunci pencarian"),
+    limit: int = Query(20, ge=1, le=50, description="Jumlah maksimal hasil"),
+    region: Optional[str] = Query(None, description="Filter asal daerah"),
+    current_user: TokenPayload = Depends(get_current_user),
+) -> dict:
+    """
+    Pencarian makanan ringan dari food_items_clean.csv.
+
+    Algoritma:
+    - Case-insensitive substring match pada kolom 'name'
+    - Boost score untuk match prefix (mulai dengan kata kunci)
+    - Filter opsional region
+    - Sort by relevance score lalu DASH score
+
+    Returns:
+        dict dengan items dan metadata
+    """
+    from pathlib import Path
+    import pandas as pd
+    from core.config import get_settings
+
+    settings = get_settings()
+    csv_path = Path(settings.ML_ARTIFACTS_PATH) / "food_items_clean.csv"
+
+    if not csv_path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"error": "Dataset makanan tidak tersedia.", "code": "DATASET_UNAVAILABLE"},
+        )
+
+    df = pd.read_csv(csv_path)
+    query_lower = q.lower().strip()
+
+    # Filter berdasarkan match name (case-insensitive)
+    name_lower = df["name"].astype(str).str.lower()
+    mask = name_lower.str.contains(query_lower, na=False, regex=False)
+    matches = df[mask].copy()
+
+    # Filter region (kalau ada kolom dan parameter dikirim)
+    if region and "region" in matches.columns:
+        region_lower = region.lower()
+        matches = matches[
+            matches["region"].astype(str).str.lower().str.contains(region_lower, na=False, regex=False)
+        ]
+
+    # Compute relevance score: prefix match dapat boost
+    def relevance(name: str) -> float:
+        n = name.lower()
+        if n.startswith(query_lower):
+            return 100.0  # Highest priority
+        if f" {query_lower}" in n:
+            return 80.0   # Word boundary match
+        return 50.0       # Substring match
+
+    matches["_relevance"] = matches["name"].apply(relevance)
+
+    # Sort: relevance desc, dash_score desc (kalau ada)
+    sort_cols = ["_relevance"]
+    if "dash_score" in matches.columns:
+        sort_cols.append("dash_score")
+
+    matches = matches.sort_values(sort_cols, ascending=[False] * len(sort_cols))
+
+    # Ambil top N
+    matches = matches.head(limit)
+
+    # Build response
+    items = []
+    for _, row in matches.iterrows():
+        image_url_val = row.get("image_url") if "image_url" in matches.columns else None
+        image_url = (
+            str(image_url_val).strip()
+            if isinstance(image_url_val, str) and image_url_val.strip()
+            else None
+        )
+        items.append({
+            "food_code": str(row.get("food_code", "")),
+            "name": str(row.get("name", "")),
+            "category": str(row.get("category", "")),
+            "region": str(row.get("region", "") or "") if "region" in row else None,
+            "image_url": image_url,
+            "energy_kcal": float(row.get("energy_kcal", 0) or 0),
+            "sodium_mg": float(row.get("sodium_mg", 0) or 0),
+            "potassium_mg": float(row.get("potassium_mg", 0) or 0),
+            "fiber_g": float(row.get("fiber_g", 0) or 0),
+            "fat_total_g": float(row.get("fat_total_g", 0) or 0),
+            "dash_score": float(row.get("dash_score", 0) or 0) if "dash_score" in row else None,
+            "dash_category": str(row.get("dash_category", "") or "") if "dash_category" in row else None,
+            "is_estimated": bool(row.get("is_estimated", False)) if "is_estimated" in row else False,
+        })
+
+    return {
+        "query": q,
+        "count": len(items),
+        "items": items,
+    }

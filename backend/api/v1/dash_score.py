@@ -46,10 +46,10 @@ def _get_user_targets(user_id: str) -> dict:
         supabase.table("user_profiles")
         .select("*")
         .eq("user_id", user_id)
-        .single()
+        .maybe_single()
         .execute()
     )
-    if not response.data:
+    if not response or not response.data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"error": "Pengguna tidak ditemukan.", "code": "USER_NOT_FOUND"},

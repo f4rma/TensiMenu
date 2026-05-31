@@ -1,19 +1,19 @@
-import { ChefHat, Gauge, LineChart } from "lucide-react";
+import { UtensilsCrossed, Gauge, LineChart } from "lucide-react";
+import Reveal from "./Reveal";
 
 const FEATURES = [
   {
-    icon: ChefHat,
+    icon: UtensilsCrossed,
     title: "Rekomendasi Personal",
     description:
-      "Menu harian yang disesuaikan dengan kebutuhan nutrisi dan selera lokal Anda. Tidak ada lagi kebingungan memilih makanan sehat.",
-    visual: "tag" as const,
-    visualLabel: "Real Log Terintegrasi",
+      "Menu harian dari masakan lokal yang disesuaikan dengan kebutuhan nutrisi, kondisi medis, dan pantangan makananmu.",
+    visual: "tags" as const,
   },
   {
     icon: Gauge,
     title: "DASH Score",
     description:
-      "Pantau kualitas asupan Anda dengan skor kepatuhan diet yang mudah dimengerti. Visual jelas dari sangat baik hingga perlu perhatian.",
+      "Skor kepatuhan diet 0–100 yang mudah dibaca, dihitung dari natrium, kalium, kalsium, serat, dan lemak.",
     visual: "progress" as const,
     progressValue: 78,
   },
@@ -21,76 +21,95 @@ const FEATURES = [
     icon: LineChart,
     title: "Tracker Progres",
     description:
-      "Visualisasi tren tekanan darah dan riwayat mikronutrien real-time. Sajikan laporan kesehatan Anda dengan dokter secara langsung.",
+      "Visualisasi tren tekanan darah dan asupan nutrisi dari waktu ke waktu untuk evaluasi yang objektif.",
     visual: "chart" as const,
   },
 ] as const;
 
 export default function FeaturesSection() {
   return (
-    <section id="features" className="py-16 md:py-24">
+    <section id="features" className="py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-4 md:px-6">
-        {/* Header */}
-        <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-brand-charcoal md:text-4xl">
-            Fitur Utama
-          </h2>
-          <div
-            className="mx-auto mt-3 h-1 w-12 rounded-full bg-brand-primary"
-            aria-hidden="true"
-          />
+        {/* Header — left aligned, no cliché underline bar */}
+        <div className="max-w-2xl">
+          <Reveal>
+            <span className="text-sm font-semibold uppercase tracking-widest text-brand-primary">
+              Fitur
+            </span>
+          </Reveal>
+          <Reveal delay={80}>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-brand-charcoal md:text-4xl">
+              Semua yang kamu butuhkan untuk menjaga tekanan darah
+            </h2>
+          </Reveal>
+          <Reveal delay={160}>
+            <p className="mt-4 text-base leading-relaxed text-brand-charcoal-soft">
+              Tiga pilar TensiMenu bekerja bersama: merekomendasikan, menilai,
+              lalu memantau dalam satu alur yang sederhana.
+            </p>
+          </Reveal>
         </div>
 
         {/* Cards grid */}
-        <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+        <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
           {FEATURES.map((feature, idx) => (
-            <article
-              key={feature.title}
-              className="group flex flex-col rounded-3xl bg-white/80 backdrop-blur-md p-6 ring-1 ring-brand-charcoal/5 shadow-glass-sm transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-glass-md motion-reduce:hover:translate-y-0"
-              style={{ animationDelay: `${idx * 80}ms` }}
-            >
-              {/* Icon */}
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary transition-colors duration-200 group-hover:bg-brand-primary group-hover:text-white">
-                <feature.icon className="h-5 w-5" strokeWidth={2.25} />
-              </div>
+            <Reveal key={feature.title} delay={idx * 120} as="article">
+              <article className="group flex h-full flex-col rounded-3xl border border-brand-charcoal/[0.06] bg-white p-7 shadow-[0_2px_16px_rgba(43,124,97,0.05)] transition-all duration-300 hover:-translate-y-1.5 hover:border-brand-primary/15 hover:shadow-[0_12px_40px_rgba(43,124,97,0.12)] motion-reduce:hover:translate-y-0">
+                {/* Icon */}
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary transition-all duration-300 group-hover:scale-110 group-hover:bg-brand-primary group-hover:text-white">
+                  <feature.icon className="h-5 w-5" strokeWidth={2.25} />
+                </div>
 
-              {/* Title + desc */}
-              <h3 className="mt-5 text-lg font-semibold tracking-tight text-brand-charcoal">
-                {feature.title}
-              </h3>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-brand-charcoal-soft">
-                {feature.description}
-              </p>
+                <h3 className="mt-6 text-lg font-semibold tracking-tight text-brand-charcoal">
+                  {feature.title}
+                </h3>
+                <p className="mt-2.5 flex-1 text-sm leading-relaxed text-brand-charcoal-soft">
+                  {feature.description}
+                </p>
 
-              {/* Visual indicator at bottom */}
-              <div className="mt-5">
-                {feature.visual === "tag" && (
-                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-brand-primary/10 px-3 py-1.5 text-xs font-medium text-brand-primary ring-1 ring-brand-primary/15">
-                    <span className="h-1.5 w-1.5 rounded-full bg-brand-primary" />
-                    {feature.visualLabel}
-                  </span>
-                )}
-
-                {feature.visual === "progress" && (
-                  <div>
-                    <div className="flex items-center justify-between text-xs text-brand-charcoal-muted">
-                      <span>Skor</span>
-                      <span className="font-semibold tabular-nums text-brand-primary">
-                        {feature.progressValue}/100
-                      </span>
+                {/* Visual indicator */}
+                <div className="mt-6 border-t border-brand-charcoal/[0.06] pt-5">
+                  {feature.visual === "tags" && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {["Rendah Garam", "Sesuai Selera", "DASH-friendly"].map(
+                        (t) => (
+                          <span
+                            key={t}
+                            className="inline-flex items-center rounded-lg bg-brand-primary/[0.07] px-2.5 py-1 text-[11px] font-medium text-brand-primary"
+                          >
+                            {t}
+                          </span>
+                        )
+                      )}
                     </div>
-                    <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-brand-charcoal/5">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-brand-primary to-brand-primary-light transition-all duration-700 ease-out"
-                        style={{ width: `${feature.progressValue}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
+                  )}
 
-                {feature.visual === "chart" && <MiniSparkline />}
-              </div>
-            </article>
+                  {feature.visual === "progress" && (
+                    <div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-brand-charcoal-muted">
+                          Skor harian
+                        </span>
+                        <span className="font-bold tabular-nums text-brand-primary">
+                          {feature.progressValue}
+                          <span className="text-brand-charcoal-muted">
+                            /100
+                          </span>
+                        </span>
+                      </div>
+                      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-brand-charcoal/[0.06]">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-brand-primary to-brand-primary-light transition-all duration-700 ease-out group-hover:opacity-90"
+                          style={{ width: `${feature.progressValue}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {feature.visual === "chart" && <MiniSparkline />}
+                </div>
+              </article>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -99,34 +118,46 @@ export default function FeaturesSection() {
 }
 
 function MiniSparkline() {
-  // Trend grafik kecil — naik turun lembut, mengkomunikasikan progres
-  const points = [4, 12, 8, 18, 14, 22, 16, 28];
+  const points = [10, 14, 9, 17, 13, 20, 15, 24];
   const max = Math.max(...points);
-  const w = 120;
-  const h = 32;
+  const min = Math.min(...points);
+  const w = 140;
+  const h = 36;
   const stepX = w / (points.length - 1);
-  const path = points
-    .map((p, i) => {
-      const x = i * stepX;
-      const y = h - (p / max) * h;
-      return `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
-    })
+  const toY = (p: number) => h - ((p - min) / (max - min || 1)) * (h - 6) - 3;
+
+  const linePath = points
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${(i * stepX).toFixed(1)} ${toY(p).toFixed(1)}`)
     .join(" ");
+  const areaPath = `${linePath} L ${w} ${h} L 0 ${h} Z`;
 
   return (
     <svg
       viewBox={`0 0 ${w} ${h}`}
-      className="h-8 w-full text-brand-primary"
+      className="h-9 w-full"
       role="img"
       aria-label="Grafik tren progres"
     >
+      <defs>
+        <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#2B7C61" stopOpacity="0.18" />
+          <stop offset="100%" stopColor="#2B7C61" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={areaPath} fill="url(#sparkFill)" />
       <path
-        d={path}
+        d={linePath}
         fill="none"
-        stroke="currentColor"
+        stroke="#2B7C61"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+      />
+      <circle
+        cx={(points.length - 1) * stepX}
+        cy={toY(points[points.length - 1])}
+        r="2.5"
+        fill="#2B7C61"
       />
     </svg>
   );

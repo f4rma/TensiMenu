@@ -7,6 +7,7 @@ POST /api/v1/recommendations/confirm            — konfirmasi konsumsi
 """
 
 import logging
+import math
 from datetime import date, datetime, timezone
 
 import pandas as pd
@@ -37,6 +38,23 @@ router = APIRouter(prefix="/recommendations", tags=["Recommendations"])
 ANTI_REPETITION_DAYS = 3
 # Top-K rekomendasi per request
 TOP_K = 15
+
+
+def _safe_float(value, default: float = 0.0) -> float:
+    """
+    Konversi nilai ke float yang aman untuk JSON.
+
+    Menangani NaN/inf (umum di dataset TKPI untuk kolom yang tidak terisi,
+    mis. phosphorus_mg). NaN tidak JSON-compliant dan bikin serialisasi
+    response gagal — kembalikan default sebagai gantinya.
+    """
+    try:
+        f = float(value)
+    except (TypeError, ValueError):
+        return default
+    if math.isnan(f) or math.isinf(f):
+        return default
+    return f
 
 
 def _load_food_df(artifacts: ModelArtifacts) -> pd.DataFrame:
@@ -175,6 +193,7 @@ async def get_recommendations(
         daily_targets = _resolve_daily_targets(profile, current_user.sub)
 
         comorbidities = profile.get("comorbidities") or []
+        food_restrictions = profile.get("food_restrictions") or []
 
         # 3. Anti-repetisi
         exclude_ids = _get_recent_food_codes(current_user.sub)
@@ -191,6 +210,7 @@ async def get_recommendations(
             top_k=fetch_size,
             exclude_ids=exclude_ids,
             comorbidities=comorbidities,
+            food_restrictions=food_restrictions,
         )
 
         # Fallback: jika hasil < 4 item, abaikan anti-repetisi
@@ -207,6 +227,7 @@ async def get_recommendations(
                 top_k=fetch_size,
                 exclude_ids=None,
                 comorbidities=comorbidities,
+                food_restrictions=food_restrictions,
             )
             is_fallback = True
 
@@ -228,7 +249,7 @@ async def get_recommendations(
 
         for _, row in recs_df.iterrows():
             food_code = str(row["food_code"])
-            dash_score = float(row.get("dash_score", 0.0))
+            dash_score = _safe_float(row.get("dash_score", 0.0))
             dash_cat = str(row.get("dash_category", get_dash_category(dash_score)))
 
             # Ambil data lengkap dari food_df untuk populate field nutrisi
@@ -251,8 +272,8 @@ async def get_recommendations(
             if not food_row.empty:
                 src = food_row.iloc[0]
                 for col in nutrition:
-                    nutrition[col] = float(src.get(col, 0.0) or 0.0)
-                energy_kcal = float(src.get("energy_kcal", 0.0) or 0.0)
+                    nutrition[col] = _safe_float(src.get(col, 0.0))
+                energy_kcal = _safe_float(src.get("energy_kcal", 0.0))
                 region_val = src.get("region")
                 if isinstance(region_val, str) and region_val.strip():
                     region = region_val
@@ -267,24 +288,30 @@ async def get_recommendations(
                     {"nutrition": nutrition, "serving_g": serving_g}
                 )
 
+            # Skala nutrisi dari per-100g ke per-porsi standar.
+            # Nilai di dataset adalah per 100 g; kartu menampilkan per porsi
+            # standar (serving_g) agar konsisten dengan yang dicatat saat
+            # konfirmasi konsumsi.
+            scale = serving_g / 100.0
+
             items.append(
                 FoodItemRecommended(
                     food_code=food_code,
                     name=str(row.get("name", "")),
                     category=category,
-                    similarity=round(float(row["similarity"]), 4),
+                    similarity=round(_safe_float(row.get("similarity", 0.0)), 4),
                     dash_score=dash_score,
                     dash_category=dash_cat,
                     is_repeated=is_fallback and food_code in exclude_ids,
                     region=region,
                     image_url=image_url,
                     is_estimated=is_estimated,
-                    energy_kcal=round(energy_kcal, 1),
-                    sodium_mg=round(nutrition["sodium_mg"], 1),
-                    potassium_mg=round(nutrition["potassium_mg"], 1),
-                    fiber_g=round(nutrition["fiber_g"], 2),
-                    fat_total_g=round(nutrition["fat_total_g"], 2),
-                    phosphorus_mg=round(nutrition["phosphorus_mg"], 1),
+                    energy_kcal=round(energy_kcal * scale, 1),
+                    sodium_mg=round(nutrition["sodium_mg"] * scale, 1),
+                    potassium_mg=round(nutrition["potassium_mg"] * scale, 1),
+                    fiber_g=round(nutrition["fiber_g"] * scale, 2),
+                    fat_total_g=round(nutrition["fat_total_g"] * scale, 2),
+                    phosphorus_mg=round(nutrition["phosphorus_mg"] * scale, 1),
                     default_serving_g=serving_g,
                 )
             )
@@ -363,6 +390,7 @@ async def get_food_alternatives(
         profile = _get_user_profile(current_user.sub)
         daily_targets = _resolve_daily_targets(profile, current_user.sub)
         comorbidities = profile.get("comorbidities") or []
+        food_restrictions = profile.get("food_restrictions") or []
         food_df = _load_food_df(artifacts)
 
         alts_df = get_alternatives(
@@ -372,6 +400,7 @@ async def get_food_alternatives(
             user_targets=daily_targets,
             top_k=5,
             comorbidities=comorbidities,
+            food_restrictions=food_restrictions,
         )
 
         if len(alts_df) < 3:
@@ -385,15 +414,15 @@ async def get_food_alternatives(
                 food_code=str(row["food_code"]),
                 name=str(row.get("name", "")),
                 category=str(row.get("category", "")),
-                similarity=round(float(row["similarity"]), 4),
-                dash_score=float(row.get("dash_score", 0.0)),
+                similarity=round(_safe_float(row.get("similarity", 0.0)), 4),
+                dash_score=_safe_float(row.get("dash_score", 0.0)),
                 dash_category=str(row.get("dash_category", "")),
-                energy_kcal=round(float(row.get("energy_kcal", 0.0) or 0.0), 1),
-                sodium_mg=round(float(row.get("sodium_mg", 0.0) or 0.0), 1),
-                potassium_mg=round(float(row.get("potassium_mg", 0.0) or 0.0), 1),
-                fiber_g=round(float(row.get("fiber_g", 0.0) or 0.0), 2),
-                fat_total_g=round(float(row.get("fat_total_g", 0.0) or 0.0), 2),
-                phosphorus_mg=round(float(row.get("phosphorus_mg", 0.0) or 0.0), 1),
+                energy_kcal=round(_safe_float(row.get("energy_kcal", 0.0)), 1),
+                sodium_mg=round(_safe_float(row.get("sodium_mg", 0.0)), 1),
+                potassium_mg=round(_safe_float(row.get("potassium_mg", 0.0)), 1),
+                fiber_g=round(_safe_float(row.get("fiber_g", 0.0)), 2),
+                fat_total_g=round(_safe_float(row.get("fat_total_g", 0.0)), 2),
+                phosphorus_mg=round(_safe_float(row.get("phosphorus_mg", 0.0)), 1),
                 default_serving_g=get_default_serving_g(str(row.get("category", ""))),
             )
             for _, row in alts_df.iterrows()
@@ -489,9 +518,9 @@ async def confirm_consumption(
             src = food_row.iloc[0]
             scale = float(serving_g) / 100.0
 
-            new_totals["energy_kcal"] += float(src.get("energy_kcal", 0.0) or 0.0) * scale
+            new_totals["energy_kcal"] += _safe_float(src.get("energy_kcal", 0.0)) * scale
             for col in ("sodium_mg", "potassium_mg", "calcium_mg", "fiber_g", "fat_total_g"):
-                new_totals[col] += float(src.get(col, 0.0) or 0.0) * scale
+                new_totals[col] += _safe_float(src.get(col, 0.0)) * scale
 
         today = date.today().isoformat()
 
@@ -546,7 +575,7 @@ async def confirm_consumption(
                 all_portions.append(
                     {
                         "nutrition": {
-                            col: float(fsrc.get(col, 0.0) or 0.0)
+                            col: _safe_float(fsrc.get(col, 0.0))
                             for col in (
                                 "sodium_mg",
                                 "potassium_mg",
@@ -564,22 +593,22 @@ async def confirm_consumption(
                 "food_codes": merged_codes,
                 "servings_g": merged_servings,
                 "total_energy_kcal": round(
-                    float(row.get("total_energy_kcal") or 0) + new_totals["energy_kcal"], 2
+                    _safe_float(row.get("total_energy_kcal")) + new_totals["energy_kcal"], 2
                 ),
                 "total_sodium_mg": round(
-                    float(row.get("total_sodium_mg") or 0) + new_totals["sodium_mg"], 2
+                    _safe_float(row.get("total_sodium_mg")) + new_totals["sodium_mg"], 2
                 ),
                 "total_potassium_mg": round(
-                    float(row.get("total_potassium_mg") or 0) + new_totals["potassium_mg"], 2
+                    _safe_float(row.get("total_potassium_mg")) + new_totals["potassium_mg"], 2
                 ),
                 "total_calcium_mg": round(
-                    float(row.get("total_calcium_mg") or 0) + new_totals["calcium_mg"], 2
+                    _safe_float(row.get("total_calcium_mg")) + new_totals["calcium_mg"], 2
                 ),
                 "total_fiber_g": round(
-                    float(row.get("total_fiber_g") or 0) + new_totals["fiber_g"], 2
+                    _safe_float(row.get("total_fiber_g")) + new_totals["fiber_g"], 2
                 ),
                 "total_fat_total_g": round(
-                    float(row.get("total_fat_total_g") or 0) + new_totals["fat_total_g"], 2
+                    _safe_float(row.get("total_fat_total_g")) + new_totals["fat_total_g"], 2
                 ),
                 "dash_score": daily_score,
                 "notes": body.notes,
@@ -596,7 +625,7 @@ async def confirm_consumption(
             first_portions = [
                 {
                     "nutrition": {
-                        col: float(food_df[food_df["food_code"] == fc].iloc[0].get(col, 0.0) or 0.0)
+                        col: _safe_float(food_df[food_df["food_code"] == fc].iloc[0].get(col, 0.0))
                         if not food_df[food_df["food_code"] == fc].empty
                         else 0.0
                         for col in (

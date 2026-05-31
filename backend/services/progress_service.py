@@ -172,3 +172,144 @@ def check_reminder_needed(user_id: str, threshold_days: int = 2) -> bool:
 
     # Jika tidak ada log dalam N hari terakhir → perlu pengingat
     return not bool(response.data)
+
+
+def get_tracker_data(user_id: str, period_days: int = 7) -> dict:
+    """
+    Agregasi lengkap untuk halaman Tracker dalam satu query.
+
+    Mengembalikan struktur yang langsung dipakai frontend TrackerView:
+      - trend.points: [{date, score}] (skor 0 untuk hari tanpa catatan)
+      - trend.average: rata-rata skor dari hari yang ADA catatan
+      - compliance: {percentage, days_achieved, total_days}
+      - weekly: {avg_dash_score, total_sodium_mg, total_potassium_mg}
+      - heatmap: {sodium_daily[], potassium_daily[], sodium_target, potassium_target}
+      - streak: {count, message}
+      - has_data: bool
+    """
+    from datetime import datetime, timedelta, timezone
+    from core.database import get_supabase
+
+    supabase = get_supabase()
+
+    cutoff = (
+        datetime.now(timezone.utc) - timedelta(days=period_days)
+    ).date().isoformat()
+
+    response = (
+        supabase.table("consumption_logs")
+        .select(
+            "log_date, dash_score, total_sodium_mg, total_potassium_mg"
+        )
+        .eq("user_id", user_id)
+        .gte("log_date", cutoff)
+        .order("log_date", desc=False)
+        .execute()
+    )
+    rows = response.data or []
+
+    # Map per tanggal (ambil terakhir bila ada duplikat tanggal)
+    by_date: dict[str, dict] = {}
+    for r in rows:
+        d = r.get("log_date")
+        if d:
+            by_date[d] = r
+
+    has_data = len(by_date) > 0
+
+    # Bangun titik tren untuk SETIAP hari dalam periode (0 jika tidak ada)
+    points: list[dict] = []
+    sodium_daily: list[float] = []
+    potassium_daily: list[float] = []
+    logged_scores: list[float] = []
+
+    for i in range(period_days):
+        day = (
+            datetime.now(timezone.utc)
+            - timedelta(days=period_days - 1 - i)
+        ).date().isoformat()
+        row = by_date.get(day)
+        if row and row.get("dash_score") is not None:
+            score = float(row["dash_score"])
+            logged_scores.append(score)
+        else:
+            score = 0.0
+        points.append({"date": day, "score": round(score, 1)})
+        sodium_daily.append(
+            round(float(row.get("total_sodium_mg") or 0), 1) if row else 0.0
+        )
+        potassium_daily.append(
+            round(float(row.get("total_potassium_mg") or 0), 1) if row else 0.0
+        )
+
+    average = round(sum(logged_scores) / len(logged_scores), 1) if logged_scores else 0.0
+
+    # Kepatuhan: % hari tercatat dengan skor >= 60
+    total_days = len(logged_scores)
+    days_achieved = sum(1 for s in logged_scores if s >= 60)
+    compliance_pct = round(days_achieved / total_days * 100, 1) if total_days else 0.0
+
+    # Ringkasan (pakai hari tercatat dalam periode)
+    sodiums = [s for s in sodium_daily if s > 0]
+    potassiums = [p for p in potassium_daily if p > 0]
+
+    # Streak: jumlah hari berturut-turut TERAKHIR dengan catatan (dari hari ini mundur)
+    streak = _compute_logging_streak(by_date)
+
+    return {
+        "trend": {
+            "points": points,
+            "average": average,
+        },
+        "compliance": {
+            "percentage": compliance_pct,
+            "days_achieved": days_achieved,
+            "total_days": total_days,
+        },
+        "weekly": {
+            "avg_dash_score": average,
+            "total_sodium_mg": round(sum(sodiums), 1) if sodiums else 0.0,
+            "total_potassium_mg": round(sum(potassiums), 1) if potassiums else 0.0,
+        },
+        "heatmap": {
+            "sodium_daily": sodium_daily,
+            "potassium_daily": potassium_daily,
+            "sodium_target": 2300,
+            "potassium_target": 3400,
+        },
+        "streak": {
+            "count": streak,
+            "message": _streak_message(streak),
+        },
+        "has_data": has_data,
+    }
+
+
+def _compute_logging_streak(by_date: dict) -> int:
+    """Hitung hari berturut-turut tercatat hingga hari ini (atau kemarin)."""
+    from datetime import datetime, timedelta, timezone
+
+    if not by_date:
+        return 0
+
+    today = datetime.now(timezone.utc).date()
+    streak = 0
+    # Mulai dari hari ini; toleransi 1 hari (kalau hari ini belum catat, mulai kemarin)
+    start_offset = 0 if today.isoformat() in by_date else 1
+    for i in range(start_offset, 400):
+        day = (today - timedelta(days=i)).isoformat()
+        if day in by_date:
+            streak += 1
+        else:
+            break
+    return streak
+
+
+def _streak_message(streak: int) -> str:
+    if streak == 0:
+        return "Mulai catat makan hari ini untuk membangun streak."
+    if streak == 1:
+        return "Hari pertama tercatat. Lanjutkan besok!"
+    if streak < 7:
+        return f"{streak} hari berturut-turut. Terus pertahankan!"
+    return f"Luar biasa! {streak} hari berturut-turut mencatat."

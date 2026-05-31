@@ -1,9 +1,22 @@
 """
 Kalkulasi DASH Compliance Score untuk TensiMenu.
 Formula deterministik: input yang sama + profil yang sama = output yang sama.
+
+Catatan implementasi:
+- DASH score dihitung berbasis kontribusi nutrisi terhadap PORSI HARIAN.
+- Asumsi: 1 sajian standar berkontribusi sekitar 1/3 kebutuhan harian
+  (3 makan utama per hari). Ini adalah praktik standar gizi klinis untuk
+  menilai "kelayakan" satu hidangan.
+- Faktor 1/3 (SERVING_TARGET_RATIO) memastikan distribusi skor terdistribusi
+  realistis dari 0 sampai 100, bukan tertekan ke skala rendah.
 """
 
 from ml.feature_engineering import NUTRIENT_WEIGHTS
+
+# Asumsi: 1 sajian = 1/3 kebutuhan harian (3 makan utama).
+# Untuk nutrisi positif (K, Ca, serat), contribution = min(aktual / (target x ratio), 1.0)
+# Untuk nutrisi negatif (Na, lemak), batasan per sajian = target x ratio.
+SERVING_TARGET_RATIO = 1.0 / 3.0
 
 
 def calculate_dash_score(nutrition_per_serving: dict, user_targets: dict) -> float:
@@ -11,16 +24,20 @@ def calculate_dash_score(nutrition_per_serving: dict, user_targets: dict) -> flo
     Hitung DASH Score (0-100) untuk satu sajian makanan.
 
     Formula:
+      Untuk setiap nutrisi DASH:
+        per_serving_target = target_harian x SERVING_TARGET_RATIO
+
       - Nutrisi positif (potassium, calcium, fiber):
-          contribution = min(aktual / target, 1.0)
+          contribution = min(aktual / per_serving_target, 1.0)
       - Nutrisi negatif (sodium, fat_total):
-          jika aktual <= target: contribution = 1.0
-          jika aktual > target: contribution = max(0, 1 - (aktual - target) / target)
-      - DASH_Score = rata-rata tertimbang × 100
+          jika aktual <= per_serving_target: contribution = 1.0
+          else: contribution = max(0, 1 - (aktual - per_serving_target) / per_serving_target)
+
+      DASH_Score = sum(weight x contribution) x 100
 
     Args:
         nutrition_per_serving: dict nilai nutrisi per sajian
-        user_targets: dict target nutrisi harian personal
+        user_targets: dict target nutrisi HARIAN personal
 
     Returns:
         float DASH Score dalam rentang [0.0, 100.0]
@@ -29,7 +46,9 @@ def calculate_dash_score(nutrition_per_serving: dict, user_targets: dict) -> flo
 
     for nutrient, config in NUTRIENT_WEIGHTS.items():
         actual = nutrition_per_serving.get(nutrient, 0.0)
-        target = user_targets.get(nutrient, 1.0)
+        daily_target = user_targets.get(nutrient, 1.0)
+        # Target per sajian (1/3 target harian)
+        target = daily_target * SERVING_TARGET_RATIO
         weight = config["weight"]
 
         if target <= 0:
@@ -54,7 +73,7 @@ def calculate_daily_dash_score(
     """
     Hitung DASH Score agregat harian sebagai rata-rata tertimbang berdasarkan porsi (gram).
 
-    DASH_Score_harian = Σ(DASH_Score_item × porsi_gram) / Σ(porsi_gram)
+    DASH_Score_harian = sum(DASH_Score_item x porsi_gram) / sum(porsi_gram)
 
     Args:
         food_items_with_portions: list of {"nutrition": dict, "serving_g": float}

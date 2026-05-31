@@ -6,10 +6,9 @@ import { Menu, X } from "lucide-react";
 import Logo from "./Logo";
 
 const NAV_LINKS = [
-  { href: "#features", label: "Features" },
+  { href: "#features", label: "Fitur" },
   { href: "#dash-diet", label: "DASH Diet" },
-  { href: "#resources", label: "Resources" },
-  { href: "#support", label: "Support" },
+  { href: "#support", label: "Kontak" },
 ] as const;
 
 export default function Navbar() {

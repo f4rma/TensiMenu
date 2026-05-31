@@ -1,33 +1,45 @@
-import { CheckCircle2, LineChart, UtensilsCrossed } from "lucide-react";
+import { CheckCircle2, LineChart, UtensilsCrossed, ShieldCheck } from "lucide-react";
 
 const FEATURES = [
   {
-    icon: CheckCircle2,
-    label: "Rekomendasi Makanan Rendah Natrium",
+    icon: UtensilsCrossed,
+    label: "Rekomendasi menu DASH dari masakan lokal",
   },
   {
     icon: LineChart,
-    label: "Pantau Tekanan Darah Real-time",
+    label: "Pantau tren tekanan darah dari waktu ke waktu",
   },
   {
-    icon: UtensilsCrossed,
-    label: "Resep DASH-Compliant Terverifikasi",
+    icon: CheckCircle2,
+    label: "Skor kepatuhan diet yang mudah dipahami",
+  },
+  {
+    icon: ShieldCheck,
+    label: "Target nutrisi menyesuaikan kondisi medismu",
   },
 ] as const;
 
 /**
- * Side panel kiri pada halaman register — value proposition + testimonial.
+ * Side panel kiri pada halaman register — value proposition fitur nyata.
+ *
+ * Catatan: tidak memakai klaim jumlah pengguna atau testimonial fiktif.
  */
 export default function RegisterSidePanel() {
   return (
     <div className="flex h-full flex-col justify-between gap-10">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
-          Mulai Perjalanan DASH Anda
+        <span className="text-sm font-semibold tracking-tight text-white">
+          TensiMenu
+        </span>
+
+        <h2 className="mt-12 text-3xl font-bold tracking-tight text-white md:text-4xl">
+          Mulai perjalanan
+          <br />
+          DASH-mu hari ini.
         </h2>
-        <p className="mt-4 text-sm leading-relaxed text-white/85 md:text-base">
-          Bergabunglah dengan ribuan pengguna yang mengelola hipertensi melalui
-          nutrisi yang terukur dan lezat.
+        <p className="mt-4 max-w-md text-sm leading-relaxed text-white/85 md:text-base">
+          Buat profil kesehatanmu, dan TensiMenu langsung menyusun rekomendasi
+          makanan yang dipersonalisasi untuk membantu menjaga tekanan darah.
         </p>
 
         <ul className="mt-8 flex flex-col gap-3.5">
@@ -42,24 +54,16 @@ export default function RegisterSidePanel() {
         </ul>
       </div>
 
-      {/* Testimonial card — glass */}
-      <figure className="rounded-2xl bg-white/10 p-4 backdrop-blur-xl ring-1 ring-white/15">
-        <blockquote className="text-xs leading-relaxed text-white/85 md:text-sm">
-          &ldquo;TensiMenu membantu saya menjaga tekanan darah tetap stabil
-          tanpa harus kehilangan rasa nikmat pada makanan.&rdquo;
-        </blockquote>
-        <figcaption className="mt-3 flex items-center gap-2.5">
-          <span
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-[10px] font-bold text-amber-900"
-            aria-hidden="true"
-          >
-            BP
-          </span>
-          <span className="text-xs font-medium text-white/90">
-            Budi Pratama, Pengguna Aktif
-          </span>
-        </figcaption>
-      </figure>
+      {/* Info card — berbasis riset, bukan testimonial fiktif */}
+      <div className="rounded-2xl bg-white/10 p-5 backdrop-blur-xl ring-1 ring-white/15">
+        <p className="text-sm leading-relaxed text-white/90">
+          DASH Diet adalah salah satu pola makan yang paling direkomendasikan
+          ahli untuk membantu mengelola tekanan darah.
+        </p>
+        <p className="mt-3 text-xs text-white/60">
+          Berdasarkan riset DASH Diet & data Tabel Komposisi Pangan Indonesia
+        </p>
+      </div>
     </div>
   );
 }
