@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display, Irish_Grover } from "next/font/google";
+import { Inter, Irish_Grover } from "next/font/google";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Providers } from "./providers";
@@ -10,16 +10,10 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  weight: ["700", "800", "900"],
-});
-
 const irishGrover = Irish_Grover({
   variable: "--font-irish-grover",
-  subsets: ["latin"],
   weight: "400",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -63,7 +57,7 @@ export default async function RootLayout({
   return (
     <html lang="id" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${playfair.variable} ${irishGrover.variable} antialiased min-h-screen bg-background`}
+        className={`${inter.variable} ${irishGrover.variable} font-[family-name:var(--font-inter)] antialiased min-h-screen bg-background`}
       >
         <Providers session={session}>
           {children}
