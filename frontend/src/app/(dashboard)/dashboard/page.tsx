@@ -52,6 +52,21 @@ interface ComplianceStats {
   has_data: boolean;
 }
 
+interface TrendPoint {
+  date: string;
+  dash_score: number | null;
+}
+
+interface ProgressOverview {
+  trend: TrendPoint[];
+  compliance: ComplianceStats;
+  weekly: {
+    avg_dash_score: number | null;
+    days_logged: number;
+  };
+  trendHasData: boolean;
+}
+
 async function fetchProfile(accessToken: string): Promise<ProfileData | null> {
   try {
     const controller = new AbortController();
@@ -110,15 +125,62 @@ async function fetchDailyProgress(accessToken: string): Promise<DailyProgress> {
   }
 }
 
-async function fetchComplianceStats(): Promise<ComplianceStats> {
-  // TODO: GET /api/v1/progress/compliance
-  return {
-    percentage: 0,
-    days_achieved: 0,
-    total_days: 0,
-    week_change: 0,
-    has_data: false,
+async function fetchProgressOverview(accessToken: string): Promise<ProgressOverview> {
+  const empty: ProgressOverview = {
+    trend: [],
+    compliance: {
+      percentage: 0,
+      days_achieved: 0,
+      total_days: 0,
+      week_change: 0,
+      has_data: false,
+    },
+    weekly: { avg_dash_score: null, days_logged: 0 },
+    trendHasData: false,
   };
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch(`${API_URL}/api/v1/progress`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    if (!res.ok) return empty;
+
+    const data = await res.json();
+    const trend: TrendPoint[] = Array.isArray(data?.trend) ? data.trend : [];
+    const c = data?.compliance ?? {};
+    const w = data?.weekly_summary ?? {};
+
+    const totalDays = Number(c.total_days_logged ?? 0);
+    const daysCompliant = Number(c.days_compliant ?? 0);
+    const percentage = Number(c.compliance_percentage ?? 0);
+    const trendHasData = trend.some((p) => p.dash_score !== null);
+
+    return {
+      trend,
+      compliance: {
+        percentage,
+        days_achieved: daysCompliant,
+        total_days: totalDays,
+        week_change: 0, // perubahan mingguan belum dihitung backend
+        has_data: totalDays > 0,
+      },
+      weekly: {
+        avg_dash_score:
+          w.avg_dash_score !== undefined && w.avg_dash_score !== null
+            ? Number(w.avg_dash_score)
+            : null,
+        days_logged: Number(w.days_logged ?? 0),
+      },
+      trendHasData,
+    };
+  } catch {
+    return empty;
+  }
 }
 
 function formatTodayDateID(): string {
@@ -129,6 +191,35 @@ function formatTodayDateID(): string {
   ];
   const now = new Date();
   return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+}
+
+function formatShortDateID(iso: string): string {
+  const months = [
+    "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
+    "Jul", "Agu", "Sep", "Okt", "Nov", "Des",
+  ];
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getDate()} ${months[d.getMonth()]}`;
+}
+
+/**
+ * Pesan target mingguan dinamis berdasarkan jumlah hari tercatat & rata-rata skor.
+ */
+function buildWeeklyMessage(
+  daysLogged: number,
+  avgScore: number | null
+): string {
+  if (daysLogged === 0) {
+    return "Mulai catat makan harian Anda untuk melihat target mingguan personal.";
+  }
+  if (avgScore === null) {
+    return `Anda sudah mencatat ${daysLogged} hari minggu ini. Lanjutkan!`;
+  }
+  if (avgScore >= 60) {
+    return `Bagus! Rata-rata skor DASH minggu ini ${avgScore} dari ${daysLogged} hari tercatat. Pertahankan.`;
+  }
+  return `Rata-rata skor DASH minggu ini ${avgScore} dari ${daysLogged} hari. Coba tingkatkan dengan menu rendah garam.`;
 }
 
 function getGreeting(name: string): string {
@@ -150,11 +241,29 @@ export default async function DashboardPage() {
   const todayProgress = session.accessToken
     ? await fetchDailyProgress(session.accessToken)
     : { dash_score: 0, consumed: { sodium_mg: 0, potassium_mg: 0 }, meals_logged: 0, has_data: false };
-  const compliance = await fetchComplianceStats();
+  const progress = session.accessToken
+    ? await fetchProgressOverview(session.accessToken)
+    : await fetchProgressOverview("");
+  const compliance = progress.compliance;
 
   const userName = profile?.full_name ?? session.user.name ?? "Sahabat";
   const sodiumTarget = profile?.daily_targets?.sodium_mg ?? 2300;
   const potassiumTarget = profile?.daily_targets?.potassium_mg ?? 4000;
+
+  // Siapkan data tren 7 hari untuk chart (isi 0 untuk hari tanpa catatan)
+  const trendScores = progress.trend.map((p) => Math.round(p.dash_score ?? 0));
+  const trendStart = progress.trend[0]?.date
+    ? formatShortDateID(progress.trend[0].date)
+    : "";
+  const trendEnd = progress.trend[progress.trend.length - 1]?.date
+    ? formatShortDateID(progress.trend[progress.trend.length - 1].date)
+    : "Hari ini";
+
+  // Pesan target mingguan dinamis berdasarkan data
+  const weeklyMessage = buildWeeklyMessage(
+    progress.weekly.days_logged,
+    progress.weekly.avg_dash_score
+  );
 
   // Apakah user benar-benar baru (belum ada data progress sama sekali)?
   const isNewUser = !todayProgress.has_data && !compliance.has_data;
@@ -222,7 +331,6 @@ export default async function DashboardPage() {
               percentage={compliance.percentage}
               daysAchieved={compliance.days_achieved}
               totalDays={compliance.total_days}
-              weekChange={compliance.week_change}
             />
           ) : (
             <EmptyComplianceCard />
@@ -241,9 +349,17 @@ export default async function DashboardPage() {
             diastolic={profile?.diastolic_bp ?? null}
           />
 
-          <EmptyTrendCard />
+          {progress.trendHasData ? (
+            <TrendChartCard
+              scores={trendScores}
+              startLabel={trendStart}
+              endLabel={trendEnd}
+            />
+          ) : (
+            <EmptyTrendCard />
+          )}
 
-          <WeeklyTargetCard message="Mulai catat makan harian Anda untuk melihat target mingguan personal." />
+          <WeeklyTargetCard message={weeklyMessage} />
         </div>
       </div>
     </div>

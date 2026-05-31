@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, AlertTriangle, Loader2 } from "lucide-react";
+import { Check, AlertTriangle, Loader2, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatFoodName } from "@/lib/foodNameFormatter";
 import FoodImage from "./FoodImage";
@@ -11,8 +11,8 @@ interface FoodCardProps {
   food: FoodRecommendation;
   /** Apakah user perlu warning karena nutrisi tertentu (mis. natrium tinggi) */
   warningNutrient?: "sodium" | "fat" | null;
-  /** Callback ketika user konfirmasi konsumsi */
-  onConfirm?: (foodCode: string) => Promise<void> | void;
+  /** Callback ketika user konfirmasi konsumsi — dengan porsi (gram) pilihan user */
+  onConfirm?: (foodCode: string, servingG: number) => Promise<void> | void;
   /** Sudah pernah dikonsumsi hari ini */
   consumed?: boolean;
   /** Animation delay untuk staggered entry */
@@ -21,6 +21,11 @@ interface FoodCardProps {
   showPhosphorus?: boolean;
 }
 
+// Batas porsi yang wajar (gram) — selaras dengan validasi backend (1-1500).
+const MIN_PORTION_G = 10;
+const MAX_PORTION_G = 1000;
+const PORTION_STEP_G = 10;
+
 /**
  * Card rekomendasi makanan individual.
  *
@@ -28,8 +33,8 @@ interface FoodCardProps {
  * - Image dengan DASH score badge floating di pojok kiri atas
  * - Nama + tag info (Rendah Garam, dll)
  * - Deskripsi singkat
- * - 3-column nutrient stats (Kalori, Natrium, Kalium)
- * - Tombol konfirmasi konsumsi
+ * - Nutrient stats yang update live sesuai porsi (gram) pilihan user
+ * - Stepper porsi + tombol konfirmasi konsumsi
  */
 export default function FoodCard({
   food,
@@ -42,11 +47,40 @@ export default function FoodCard({
   const [isConfirming, setIsConfirming] = useState(false);
   const [isConsumed, setIsConsumed] = useState(consumed);
 
+  // Porsi default dari backend (mis. 50g untuk lauk). User bisa ubah.
+  const baseServing = food.default_serving_g && food.default_serving_g > 0
+    ? food.default_serving_g
+    : 100;
+  const [portionG, setPortionG] = useState<number>(Math.round(baseServing));
+
+  // Nilai nutrisi dari backend sudah diskalakan ke baseServing.
+  // Untuk porsi custom: kalikan dengan ratio porsi / baseServing.
+  const ratio = portionG / baseServing;
+  const scaled = {
+    energy: food.energy_kcal * ratio,
+    sodium: food.sodium_mg * ratio,
+    potassium: food.potassium_mg * ratio,
+    phosphorus: (food.phosphorus_mg ?? 0) * ratio,
+  };
+
+  const adjustPortion = (delta: number) => {
+    setPortionG((prev) => {
+      const next = Math.round((prev + delta) / PORTION_STEP_G) * PORTION_STEP_G;
+      return Math.max(MIN_PORTION_G, Math.min(MAX_PORTION_G, next));
+    });
+  };
+
+  const handlePortionInput = (raw: string) => {
+    const n = Number(raw);
+    if (Number.isNaN(n)) return;
+    setPortionG(Math.max(MIN_PORTION_G, Math.min(MAX_PORTION_G, Math.round(n))));
+  };
+
   const handleConfirm = async () => {
     if (isConsumed || isConfirming) return;
     setIsConfirming(true);
     try {
-      await onConfirm?.(food.food_code);
+      await onConfirm?.(food.food_code, portionG);
       setIsConsumed(true);
     } catch (err) {
       // Error sudah ditampilkan oleh parent (setConfirmError di RecommendationsView).
@@ -138,37 +172,91 @@ export default function FoodCard({
             showPhosphorus ? "grid-cols-4" : "grid-cols-3"
           )}
         >
-          <NutrientStat label="Kalori" value={Math.round(food.energy_kcal)} unit="kkal" />
+          <NutrientStat label="Kalori" value={Math.round(scaled.energy)} unit="kkal" />
           <NutrientStat
             label="Natrium"
-            value={Math.round(food.sodium_mg)}
+            value={Math.round(scaled.sodium)}
             unit="mg"
             highlight={warningNutrient === "sodium"}
           />
           <NutrientStat
             label="Kalium"
-            value={Math.round(food.potassium_mg)}
+            value={Math.round(scaled.potassium)}
             unit="mg"
           />
           {showPhosphorus && (
             <NutrientStat
               label="Fosfor"
-              value={Math.round(food.phosphorus_mg ?? 0)}
+              value={Math.round(scaled.phosphorus)}
               unit="mg"
-              highlight={(food.phosphorus_mg ?? 0) > 200}
+              highlight={scaled.phosphorus > 200}
             />
           )}
         </div>
 
-        {/* Porsi standar */}
-        {food.default_serving_g && food.default_serving_g !== 100 && (
-          <p className="mt-2 text-[10px] text-brand-charcoal-muted">
-            Nutrisi per 100 g · porsi standar{" "}
-            <span className="font-semibold text-brand-charcoal-soft tabular-nums">
-              {Math.round(food.default_serving_g)} g
-            </span>
+        {/* Input porsi (gram) — update nilai gizi secara live */}
+        <div className="mt-3">
+          <div className="flex items-center justify-between gap-2">
+            <label
+              htmlFor={`portion-${food.food_code}`}
+              className="text-[10px] font-semibold uppercase tracking-wider text-brand-charcoal-muted"
+            >
+              Porsi Saya
+            </label>
+            <div className="inline-flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => adjustPortion(-PORTION_STEP_G)}
+                disabled={isConsumed || portionG <= MIN_PORTION_G}
+                aria-label="Kurangi porsi"
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-brand-charcoal/10 text-brand-charcoal-soft transition-colors duration-150 hover:bg-brand-primary/5 hover:text-brand-primary disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+              >
+                <Minus className="h-3.5 w-3.5" strokeWidth={2.5} />
+              </button>
+
+              <div className="relative">
+                <input
+                  id={`portion-${food.food_code}`}
+                  type="number"
+                  inputMode="numeric"
+                  min={MIN_PORTION_G}
+                  max={MAX_PORTION_G}
+                  step={PORTION_STEP_G}
+                  value={portionG}
+                  disabled={isConsumed}
+                  onChange={(e) => handlePortionInput(e.target.value)}
+                  className="w-16 rounded-lg border border-brand-charcoal/10 bg-white py-1 pl-2 pr-5 text-center text-sm font-bold tabular-nums text-brand-charcoal focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/30 disabled:bg-brand-charcoal/5 disabled:opacity-60 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                />
+                <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-brand-charcoal-muted">
+                  g
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => adjustPortion(PORTION_STEP_G)}
+                disabled={isConsumed || portionG >= MAX_PORTION_G}
+                aria-label="Tambah porsi"
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-brand-charcoal/10 text-brand-charcoal-soft transition-colors duration-150 hover:bg-brand-primary/5 hover:text-brand-primary disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+              >
+                <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+              </button>
+            </div>
+          </div>
+          <p className="mt-1.5 text-[10px] text-brand-charcoal-muted">
+            Porsi standar {Math.round(baseServing)} g.{" "}
+            {portionG !== Math.round(baseServing) && (
+              <button
+                type="button"
+                onClick={() => setPortionG(Math.round(baseServing))}
+                disabled={isConsumed}
+                className="font-medium text-brand-primary underline-offset-2 hover:underline disabled:no-underline disabled:opacity-50"
+              >
+                Atur ke standar
+              </button>
+            )}
           </p>
-        )}
+        </div>
 
         {/* Action button */}
         <button

@@ -15,35 +15,32 @@ export const metadata: Metadata = {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-interface BackendProgressResponse {
+interface BackendTrackerResponse {
   trend: {
-    period: string;
     points: { date: string; score: number }[];
     average: number;
-    week_change_pct?: number;
   };
-  compliance?: {
+  compliance: {
     percentage: number;
     days_achieved: number;
     total_days: number;
   };
-  weekly?: {
+  weekly: {
     avg_dash_score: number;
     total_sodium_mg: number;
     total_potassium_mg: number;
-    insight_message?: string;
   };
-  heatmap?: {
+  heatmap: {
     sodium_daily: number[];
     potassium_daily: number[];
     sodium_target: number;
     potassium_target: number;
   };
-  streak?: {
+  streak: {
     count: number;
     message: string;
   };
-  has_data?: boolean;
+  has_data: boolean;
 }
 
 async function fetchProgressByPeriod(
@@ -55,7 +52,7 @@ async function fetchProgressByPeriod(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 4000);
     const res = await fetch(
-      `${API_URL}/api/v1/progress?period=${days}`,
+      `${API_URL}/api/v1/progress/tracker?period=${days}`,
       {
         headers: { Authorization: `Bearer ${accessToken}` },
         cache: "no-store",
@@ -65,8 +62,8 @@ async function fetchProgressByPeriod(
     clearTimeout(timeoutId);
 
     if (!res.ok) return null;
-    const data: BackendProgressResponse = await res.json();
-    if (!data?.trend?.points?.length) return null;
+    const data: BackendTrackerResponse = await res.json();
+    if (!data?.has_data || !data?.trend?.points?.length) return null;
 
     return normalizeProgress(data, period);
   } catch {
@@ -75,11 +72,11 @@ async function fetchProgressByPeriod(
 }
 
 function normalizeProgress(
-  backend: BackendProgressResponse,
+  backend: BackendTrackerResponse,
   period: Period
 ): TrackerData {
   const sodiumTarget = backend.heatmap?.sodium_target ?? 2300;
-  const potassiumTarget = backend.heatmap?.potassium_target ?? 4000;
+  const potassiumTarget = backend.heatmap?.potassium_target ?? 3400;
 
   return {
     trend: {
@@ -89,7 +86,7 @@ function normalizeProgress(
         score: Number(p.score) || 0,
       })),
       average: Number(backend.trend.average) || 0,
-      week_change_pct: Number(backend.trend.week_change_pct ?? 0),
+      week_change_pct: 0,
     },
     compliance: {
       percentage: backend.compliance?.percentage ?? 0,
@@ -100,7 +97,7 @@ function normalizeProgress(
       avg_dash_score: backend.weekly?.avg_dash_score ?? 0,
       total_sodium_mg: backend.weekly?.total_sodium_mg ?? 0,
       total_potassium_mg: backend.weekly?.total_potassium_mg ?? 0,
-      insight_message: backend.weekly?.insight_message,
+      insight_message: undefined,
     },
     heatmap: {
       sodium_daily: backend.heatmap?.sodium_daily ?? [],

@@ -79,7 +79,17 @@ export default function RecommendationsView({
         cache: "no-store",
       });
 
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) {
+        // Surface status code untuk memudahkan debugging
+        let detail = "";
+        try {
+          const body = await response.json();
+          detail = body?.detail?.error || body?.detail || "";
+        } catch {
+          /* abaikan */
+        }
+        throw new Error(`HTTP ${response.status}${detail ? `: ${detail}` : ""}`);
+      }
 
       const data = await response.json();
       const newItems: FoodRecommendation[] = (data?.recommendations ?? []).map(
@@ -118,7 +128,7 @@ export default function RecommendationsView({
     } catch (err) {
       setLoadError(
         err instanceof Error
-          ? "Gagal memuat rekomendasi tambahan."
+          ? `Gagal memuat rekomendasi tambahan (${err.message}).`
           : "Terjadi kesalahan."
       );
     } finally {
@@ -126,7 +136,7 @@ export default function RecommendationsView({
     }
   };
 
-  const handleConfirm = async (foodCode: string) => {
+  const handleConfirm = async (foodCode: string, servingG: number) => {
     setConfirmError(null);
     const accessToken = session?.accessToken;
     if (!accessToken) {
@@ -135,9 +145,10 @@ export default function RecommendationsView({
       throw new Error(msg);
     }
 
-    // Cari porsi standar untuk makanan ini. Kalau tidak ditemukan, fallback 100 g.
+    // Porsi (gram) dari input user di kartu. Fallback ke porsi standar item.
     const item = allRecommendations.find((f) => f.food_code === foodCode);
-    const servingG = item?.default_serving_g ?? 100;
+    const resolvedServing =
+      servingG && servingG > 0 ? servingG : item?.default_serving_g ?? 100;
 
     let response: Response;
     try {
@@ -149,7 +160,7 @@ export default function RecommendationsView({
         },
         body: JSON.stringify({
           food_codes: [foodCode],
-          servings_g: [servingG],
+          servings_g: [resolvedServing],
         }),
       });
     } catch (err) {
@@ -218,7 +229,7 @@ export default function RecommendationsView({
         />
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {filtered.map((food, idx) => (
               <FoodCard
                 key={food.food_code}
