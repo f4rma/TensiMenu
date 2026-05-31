@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Activity, Sparkles } from "lucide-react";
+import { ArrowRight, Activity } from "lucide-react";
 import Reveal from "./Reveal";
 import RotatingFoodImage from "./RotatingFoodImage";
 
@@ -27,13 +27,6 @@ export default function HeroSection() {
       <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-4 md:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8">
         {/* Left: copy */}
         <div>
-          <Reveal>
-            <span className="inline-flex items-center gap-2 rounded-full border border-brand-primary/15 bg-white/70 px-3.5 py-1.5 text-xs font-medium text-brand-primary backdrop-blur-md">
-              <Sparkles className="h-3.5 w-3.5" />
-              Berbasis riset DASH Diet & data gizi Indonesia
-            </span>
-          </Reveal>
-
           <Reveal delay={80}>
             <h1 className="mt-6 text-[2.5rem] font-bold leading-[1.08] tracking-tight text-brand-charcoal sm:text-5xl lg:text-[3.5rem]">
               Kelola hipertensi lewat{" "}
