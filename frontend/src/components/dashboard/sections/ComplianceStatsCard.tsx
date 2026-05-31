@@ -8,20 +8,25 @@ interface ComplianceStatsCardProps {
   /** Hari berhasil mencapai target dari total hari */
   daysAchieved: number;
   totalDays: number;
-  /** Perubahan dari minggu lalu (positif = naik) */
-  weekChange: number;
 }
 
 /**
- * Card statistik kepatuhan dengan ring chart 71% style mockup.
+ * Card statistik kepatuhan dengan ring chart style mockup.
  * Background: dark teal gradient.
  */
 export default function ComplianceStatsCard({
   percentage,
   daysAchieved,
   totalDays,
-  weekChange,
 }: ComplianceStatsCardProps) {
+  // Label kualitatif berdasarkan tingkat kepatuhan
+  const label =
+    percentage >= 80
+      ? "Sangat konsisten"
+      : percentage >= 50
+        ? "Cukup konsisten"
+        : "Perlu ditingkatkan";
+
   return (
     <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-primary to-brand-primary-dark p-5 shadow-glass-md text-white">
       {/* Decorative orb */}
@@ -45,21 +50,15 @@ export default function ComplianceStatsCard({
           </div>
 
           <div className="flex-1">
-            <div className="flex items-center gap-1.5 text-xs text-amber-200">
-              <TrendingUp className="h-3 w-3" />
-              <span className="font-medium">
-                {weekChange > 0 ? "Meningkat" : weekChange < 0 ? "Turun" : "Stabil"}{" "}
-                {Math.abs(weekChange)}%
-              </span>
-            </div>
+            <p className="text-sm font-semibold text-white">{label}</p>
             <p className="mt-0.5 text-[10px] uppercase tracking-wider text-white/60">
-              dari minggu lalu
+              tingkat kepatuhan DASH
             </p>
           </div>
         </div>
 
         <p className="mt-4 text-xs leading-relaxed text-white/85">
-          {daysAchieved} dari {totalDays} hari terakhir Anda berhasil mencapai
+          {daysAchieved} dari {totalDays} hari tercatat, Anda berhasil mencapai
           target skor DASH ≥ 60.
         </p>
       </div>

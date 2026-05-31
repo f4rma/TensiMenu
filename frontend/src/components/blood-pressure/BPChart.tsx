@@ -60,6 +60,11 @@ export default function BPChart({
   // X-axis labels stride
   const labelStride = sorted.length <= 7 ? 1 : Math.ceil(sorted.length / 7);
 
+  // Deteksi apakah ada >1 reading di hari yang sama → kalau ya, tampilkan
+  // jam juga di label agar tidak muncul tanggal kembar yang membingungkan.
+  const dayKeys = sorted.map((r) => new Date(r.measured_at).toDateString());
+  const hasSameDayReadings = new Set(dayKeys).size < dayKeys.length;
+
   return (
     <svg
       viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
@@ -165,7 +170,7 @@ export default function BPChart({
             textAnchor="middle"
             className="fill-brand-charcoal-muted text-[10px]"
           >
-            {formatDayLabel(r.measured_at)}
+            {formatDayLabel(r.measured_at, hasSameDayReadings)}
           </text>
         );
       })}
@@ -197,14 +202,19 @@ function buildSmoothPath(coords: [number, number][]): string {
   return d;
 }
 
-function formatDayLabel(iso: string): string {
+function formatDayLabel(iso: string, withTime = false): string {
   const months = [
     "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
     "Jul", "Agu", "Sep", "Okt", "Nov", "Des",
   ];
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
-  return `${d.getDate()} ${months[d.getMonth()]}`;
+  const dayLabel = `${d.getDate()} ${months[d.getMonth()]}`;
+  if (!withTime) return dayLabel;
+  // Sertakan jam:menit kalau ada beberapa reading di hari yang sama
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${dayLabel} ${hh}:${mm}`;
 }
 
 function EmptyChart() {

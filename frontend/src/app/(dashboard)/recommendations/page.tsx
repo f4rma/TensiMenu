@@ -5,6 +5,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import NutritionSummaryCard from "@/components/recommendations/NutritionSummaryCard";
 import RecommendationsView from "@/components/recommendations/RecommendationsView";
+import ConsumedTodayList, {
+  type ConsumedItem,
+} from "@/components/recommendations/ConsumedTodayList";
 import type { FoodRecommendation } from "@/components/recommendations/types";
 
 export const metadata: Metadata = {
@@ -29,6 +32,8 @@ interface DailyConsumption {
   sodium_mg: number;
   potassium_mg: number;
   fiber_g: number;
+  items: ConsumedItem[];
+  meals_logged: number;
 }
 
 async function fetchProfile(accessToken: string): Promise<ProfileData | null> {
@@ -112,16 +117,29 @@ async function fetchTodayConsumption(
         sodium_mg: 0,
         potassium_mg: 0,
         fiber_g: 0,
+        items: [],
+        meals_logged: 0,
       };
     }
 
     const data = await res.json();
     const c = data?.consumption ?? {};
+    const rawItems = Array.isArray(data?.items) ? data.items : [];
+    const items: ConsumedItem[] = rawItems.map((it: Record<string, unknown>) => ({
+      food_code: String(it.food_code ?? ""),
+      name: String(it.name ?? ""),
+      category: String(it.category ?? ""),
+      image_url: (it.image_url as string | null) ?? null,
+      serving_g: Number(it.serving_g ?? 0),
+      count: Number(it.count ?? 1),
+    }));
     return {
       energy_kcal: Number(c.energy_kcal ?? 0),
       sodium_mg: Number(c.sodium_mg ?? 0),
       potassium_mg: Number(c.potassium_mg ?? 0),
       fiber_g: Number(c.fiber_g ?? 0),
+      items,
+      meals_logged: Number(data?.meals_logged ?? 0),
     };
   } catch {
     return {
@@ -129,6 +147,8 @@ async function fetchTodayConsumption(
       sodium_mg: 0,
       potassium_mg: 0,
       fiber_g: 0,
+      items: [],
+      meals_logged: 0,
     };
   }
 }
@@ -151,10 +171,12 @@ export default async function RecommendationsPage() {
 
   const targets = profile?.daily_targets ?? {
     sodium_mg: 2300,
-    potassium_mg: 4000,
-    fiber_g: 30,
+    potassium_mg: 2600,
+    fiber_g: 25,
     energy_kcal: 2000,
   };
+
+  const isCkd = (profile?.comorbidities ?? []).includes("ckd");
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -189,12 +211,29 @@ export default async function RecommendationsPage() {
         />
       </div>
 
-      {/* View interaktif */}
-      <RecommendationsView
-        initialRecommendations={recsResult.data}
-        backendAvailable={recsResult.backendOk}
-        isCkd={(profile?.comorbidities ?? []).includes("ckd")}
-      />
+      {/* Layout 2 kolom: rekomendasi (utama) + daftar konsumsi (sidebar) */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6">
+        {/* Kolom utama: rekomendasi */}
+        <div className="min-w-0">
+          <RecommendationsView
+            initialRecommendations={recsResult.data}
+            backendAvailable={recsResult.backendOk}
+            isCkd={isCkd}
+          />
+        </div>
+
+        {/* Sidebar: makanan yang sudah dimakan hari ini */}
+        {consumption.items.length > 0 && (
+          <aside className="mt-6 lg:mt-0">
+            <div className="lg:sticky lg:top-24">
+              <ConsumedTodayList
+                items={consumption.items}
+                mealsLogged={consumption.meals_logged}
+              />
+            </div>
+          </aside>
+        )}
+      </div>
     </div>
   );
 }

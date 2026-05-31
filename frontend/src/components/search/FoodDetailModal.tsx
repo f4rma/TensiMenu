@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
@@ -10,6 +11,7 @@ import {
   Tag,
   Check,
   Plus,
+  Minus,
   Loader2,
   Flame,
   Droplet,
@@ -24,6 +26,13 @@ import type { FoodSearchResult } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
+// Batas porsi (gram) — selaras dengan validasi backend (1-1500).
+const MIN_PORTION_G = 10;
+const MAX_PORTION_G = 1000;
+const PORTION_STEP_G = 10;
+// Nilai gizi hasil pencarian adalah per 100 gram.
+const SEARCH_BASE_G = 100;
+
 interface FoodDetailModalProps {
   food: FoodSearchResult | null;
   onClose: () => void;
@@ -33,7 +42,7 @@ interface FoodDetailModalProps {
  * Modal detail makanan setelah klik hasil pencarian.
  *
  * Features:
- * - Tampilkan nutrisi lengkap (per 100g)
+ * - Tampilkan nutrisi yang update live sesuai porsi (gram) pilihan user
  * - DASH score + kategori dengan visual indikator
  * - Tombol "Tambah ke Catatan" — POST ke /recommendations/confirm
  * - ESC / click outside untuk tutup
@@ -46,9 +55,32 @@ export default function FoodDetailModal({ food, onClose }: FoodDetailModalProps)
   const [confirming, setConfirming] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [portionG, setPortionG] = useState<number>(SEARCH_BASE_G);
+  const [mounted, setMounted] = useState(false);
+
+  // Portal hanya aktif di client (document tersedia).
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (!food) return null;
   const displayName = formatFoodName(food.name);
+
+  // Skala nilai gizi (per 100g) ke porsi pilihan user.
+  const ratio = portionG / SEARCH_BASE_G;
+
+  const adjustPortion = (delta: number) => {
+    setPortionG((prev) => {
+      const next = Math.round((prev + delta) / PORTION_STEP_G) * PORTION_STEP_G;
+      return Math.max(MIN_PORTION_G, Math.min(MAX_PORTION_G, next));
+    });
+  };
+
+  const handlePortionInput = (raw: string) => {
+    const n = Number(raw);
+    if (Number.isNaN(n)) return;
+    setPortionG(Math.max(MIN_PORTION_G, Math.min(MAX_PORTION_G, Math.round(n))));
+  };
 
   const handleAddToConsumption = async () => {
     if (confirmed || confirming) return;
@@ -71,7 +103,7 @@ export default function FoodDetailModal({ food, onClose }: FoodDetailModalProps)
         },
         body: JSON.stringify({
           food_codes: [food.food_code],
-          servings_g: [100],
+          servings_g: [portionG],
         }),
       });
 
@@ -95,7 +127,9 @@ export default function FoodDetailModal({ food, onClose }: FoodDetailModalProps)
   const dashColor = getDashColorClass(food.dash_score);
   const dashBgColor = getDashBgClass(food.dash_score);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -110,9 +144,9 @@ export default function FoodDetailModal({ food, onClose }: FoodDetailModalProps)
       />
 
       {/* Dialog */}
-      <div className="relative w-full max-w-md animate-in fade-in slide-in-from-bottom-3 duration-300 rounded-3xl bg-white shadow-glass-lg overflow-hidden">
+      <div className="relative flex max-h-[88vh] w-full max-w-md flex-col animate-in fade-in slide-in-from-bottom-3 duration-300 rounded-3xl bg-white shadow-glass-lg overflow-hidden">
         {/* Header dengan DASH score banner */}
-        <div className={cn("relative px-5 py-6", dashBgColor)}>
+        <div className={cn("relative shrink-0 px-5 py-6", dashBgColor)}>
           <button
             type="button"
             onClick={onClose}
@@ -162,6 +196,8 @@ export default function FoodDetailModal({ food, onClose }: FoodDetailModalProps)
           </div>
         </div>
 
+        {/* Body scrollable — header tetap, konten gizi bisa di-scroll */}
+        <div className="flex-1 overflow-y-auto">
         {/* Estimasi warning */}
         {food.is_estimated && (
           <div className="flex items-start gap-2 border-b border-amber-200 bg-amber-50 px-5 py-2.5">
@@ -175,35 +211,84 @@ export default function FoodDetailModal({ food, onClose }: FoodDetailModalProps)
 
         {/* Nutrient grid */}
         <div className="p-5">
+          {/* Input porsi (gram) */}
+          <div className="mb-4 flex items-center justify-between gap-2 rounded-2xl bg-brand-cream-soft border border-brand-charcoal/5 px-3 py-2.5">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-brand-charcoal-muted">
+                Porsi Saya
+              </p>
+              <p className="text-[10px] text-brand-charcoal-muted">
+                Nilai gizi menyesuaikan otomatis
+              </p>
+            </div>
+            <div className="inline-flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => adjustPortion(-PORTION_STEP_G)}
+                disabled={confirmed || portionG <= MIN_PORTION_G}
+                aria-label="Kurangi porsi"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-brand-charcoal/10 bg-white text-brand-charcoal-soft transition-colors duration-150 hover:bg-brand-primary/5 hover:text-brand-primary disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+              >
+                <Minus className="h-3.5 w-3.5" strokeWidth={2.5} />
+              </button>
+              <div className="relative">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={MIN_PORTION_G}
+                  max={MAX_PORTION_G}
+                  step={PORTION_STEP_G}
+                  value={portionG}
+                  disabled={confirmed}
+                  onChange={(e) => handlePortionInput(e.target.value)}
+                  aria-label="Porsi dalam gram"
+                  className="w-16 rounded-lg border border-brand-charcoal/10 bg-white py-1.5 pl-2 pr-5 text-center text-sm font-bold tabular-nums text-brand-charcoal focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/30 disabled:bg-brand-charcoal/5 disabled:opacity-60 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                />
+                <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-brand-charcoal-muted">
+                  g
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => adjustPortion(PORTION_STEP_G)}
+                disabled={confirmed || portionG >= MAX_PORTION_G}
+                aria-label="Tambah porsi"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-brand-charcoal/10 bg-white text-brand-charcoal-soft transition-colors duration-150 hover:bg-brand-primary/5 hover:text-brand-primary disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+              >
+                <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+              </button>
+            </div>
+          </div>
+
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-brand-charcoal-muted">
-            Nutrisi per 100 gram
+            Nilai gizi untuk {portionG} gram
           </p>
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
             <NutrientBox
               icon={Flame}
               label="Energi"
-              value={food.energy_kcal}
+              value={food.energy_kcal * ratio}
               unit="kkal"
               color="amber"
             />
             <NutrientBox
               icon={Droplet}
               label="Natrium"
-              value={food.sodium_mg}
+              value={food.sodium_mg * ratio}
               unit="mg"
               color="rose"
             />
             <NutrientBox
               icon={Apple}
               label="Kalium"
-              value={food.potassium_mg}
+              value={food.potassium_mg * ratio}
               unit="mg"
               color="emerald"
             />
             <NutrientBox
               icon={Bone}
               label="Lemak Total"
-              value={food.fat_total_g}
+              value={food.fat_total_g * ratio}
               unit="g"
               decimals={1}
               color="amber"
@@ -211,7 +296,7 @@ export default function FoodDetailModal({ food, onClose }: FoodDetailModalProps)
             <NutrientBox
               icon={Wheat}
               label="Serat"
-              value={food.fiber_g}
+              value={food.fiber_g * ratio}
               unit="g"
               decimals={1}
               color="emerald"
@@ -260,8 +345,10 @@ export default function FoodDetailModal({ food, onClose }: FoodDetailModalProps)
                 : "Tambah ke Catatan Konsumsi"}
           </button>
         </div>
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
