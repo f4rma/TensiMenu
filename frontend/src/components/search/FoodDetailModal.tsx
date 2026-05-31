@@ -63,6 +63,17 @@ export default function FoodDetailModal({ food, onClose }: FoodDetailModalProps)
     setMounted(true);
   }, []);
 
+  // Reset state setiap kali makanan yang ditampilkan berganti.
+  // Tanpa ini, status "confirmed" dari item sebelumnya nyangkut sehingga
+  // modal item baru langsung tampil "Berhasil ditambahkan" + tombol disabled.
+  const foodCode = food?.food_code;
+  useEffect(() => {
+    setConfirming(false);
+    setConfirmed(false);
+    setError(null);
+    setPortionG(SEARCH_BASE_G);
+  }, [foodCode]);
+
   if (!food) return null;
   const displayName = formatFoodName(food.name);
 

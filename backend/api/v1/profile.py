@@ -20,6 +20,48 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/profile", tags=["Profile"])
 
 
+def _seed_initial_bp_record(user_id: str, systolic: int | None, diastolic: int | None) -> None:
+    """
+    Buat catatan tekanan darah pertama di blood_pressure_records dari data
+    onboarding, supaya BP awal langsung muncul di halaman Riwayat TD dan
+    ikut diperhitungkan untuk rekomendasi.
+
+    Idempotent & defensif:
+    - Hanya insert kalau systolic & diastolic dua-duanya ada.
+    - Skip kalau user SUDAH punya catatan BP (hindari duplikat saat re-submit
+      onboarding atau profil dibuat ulang).
+    - Tidak melempar exception kalau gagal — cukup log, agar tidak memblokir
+      pembuatan profil.
+    """
+    if systolic is None or diastolic is None:
+        return
+
+    supabase = get_supabase()
+    try:
+        existing = (
+            supabase.table("blood_pressure_records")
+            .select("id")
+            .eq("user_id", user_id)
+            .limit(1)
+            .execute()
+        )
+        if existing.data:
+            return  # sudah ada catatan, jangan duplikat
+
+        is_critical = systolic >= 180 or diastolic >= 120
+        supabase.table("blood_pressure_records").insert({
+            "user_id": user_id,
+            "systolic_mmhg": int(systolic),
+            "diastolic_mmhg": int(diastolic),
+            "measured_at": datetime.now(timezone.utc).isoformat(),
+            "notes": "Data awal dari pengisian profil",
+            "is_critical": is_critical,
+        }).execute()
+        logger.info("Catatan BP awal dibuat untuk user %s: %d/%d", user_id, systolic, diastolic)
+    except Exception as exc:
+        logger.warning("Gagal seed catatan BP awal untuk user %s: %s", user_id, str(exc))
+
+
 def _build_profile_response(row: dict) -> UserProfileResponse:
     """Konversi row Supabase ke UserProfileResponse."""
     daily_targets = row.get("daily_targets")
@@ -153,6 +195,11 @@ async def create_profile(
         )
 
     logger.info("Profil dibuat untuk user: %s", current_user.sub)
+
+    # Seed catatan tekanan darah awal dari data onboarding (kalau ada),
+    # supaya langsung muncul di Riwayat TD dan ikut hitung rekomendasi.
+    _seed_initial_bp_record(current_user.sub, body.systolic_bp, body.diastolic_bp)
+
     return _build_profile_response(response.data[0])
 
 
@@ -268,4 +315,10 @@ async def update_profile(
         )
 
     logger.info("Profil diperbarui untuk user: %s", current_user.sub)
+
+    # Seed catatan BP awal kalau user mengisi BP di profil tapi belum punya
+    # catatan sama sekali (mis. melewati BP saat onboarding, isi belakangan
+    # lewat edit profil). Helper sudah idempotent (skip kalau sudah ada).
+    _seed_initial_bp_record(current_user.sub, body.systolic_bp, body.diastolic_bp)
+
     return _build_profile_response(response.data[0])

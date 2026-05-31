@@ -88,12 +88,12 @@ export default function AuthLayout({ sidePanel, children }: AuthLayoutProps) {
               </Link>
             </li>
             <li>
-              <Link
-                href="#support"
+              <a
+                href="mailto:hello@tensimenu.id"
                 className="transition-colors duration-150 hover:text-brand-primary"
               >
                 Contact
-              </Link>
+              </a>
             </li>
           </ul>
         </div>

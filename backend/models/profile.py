@@ -18,8 +18,8 @@ class UserProfileCreate(BaseModel):
     full_name: str = Field(..., min_length=1, max_length=255)
     age: int = Field(..., ge=18, le=90)
     gender: Literal["laki-laki", "perempuan"]
-    weight_kg: float = Field(..., gt=0)
-    height_cm: float = Field(..., gt=0)
+    weight_kg: float = Field(..., ge=20, le=300)
+    height_cm: float = Field(..., ge=100, le=250)
     systolic_bp: Optional[int] = Field(None, ge=70, le=250)
     diastolic_bp: Optional[int] = Field(None, ge=40, le=150)
     activity_level: ActivityLevel = "light"
@@ -35,8 +35,8 @@ class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = Field(None, min_length=1, max_length=255)
     age: Optional[int] = Field(None, ge=18, le=90)
     gender: Optional[Literal["laki-laki", "perempuan"]] = None
-    weight_kg: Optional[float] = Field(None, gt=0)
-    height_cm: Optional[float] = Field(None, gt=0)
+    weight_kg: Optional[float] = Field(None, ge=20, le=300)
+    height_cm: Optional[float] = Field(None, ge=100, le=250)
     systolic_bp: Optional[int] = Field(None, ge=70, le=250)
     diastolic_bp: Optional[int] = Field(None, ge=40, le=150)
     activity_level: Optional[ActivityLevel] = None
