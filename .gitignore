@@ -27,9 +27,8 @@ notebooks/artifacts/
 node_modules/
 .next/
 
-# specs
-.kiro/specs/tensimenu/
-.kiro/steering/
+# Kiro (AI IDE) — jangan commit konfigurasi/spec lokal
+.kiro/
 
 docs/
 
