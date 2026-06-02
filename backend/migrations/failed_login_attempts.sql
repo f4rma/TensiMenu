@@ -1,11 +1,19 @@
 -- Migration untuk tabel failed_login_attempts
 -- Digunakan untuk tracking gagal login dan IP blocking
 
+-- Drop policies dan index terlebih dahulu jika ada
+DROP POLICY IF EXISTS "Service role can access all" ON failed_login_attempts;
+DROP POLICY IF EXISTS "Anon can read" ON failed_login_attempts;
+DROP POLICY IF EXISTS "Anon can insert" ON failed_login_attempts;
+DROP POLICY IF EXISTS "Anon can update" ON failed_login_attempts;
+DROP INDEX IF EXISTS idx_failed_login_ip;
+DROP INDEX IF EXISTS idx_failed_login_blocked;
+
 -- Drop tabel jika sudah ada (hati-hati, akan menghapus data)
--- DROP TABLE IF EXISTS failed_login_attempts CASCADE;
+DROP TABLE IF EXISTS failed_login_attempts CASCADE;
 
 -- Buat tabel baru
-CREATE TABLE IF NOT EXISTS failed_login_attempts (
+CREATE TABLE failed_login_attempts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     ip_address VARCHAR(45) NOT NULL UNIQUE,
     attempt_count INTEGER NOT NULL DEFAULT 0,
@@ -16,8 +24,8 @@ CREATE TABLE IF NOT EXISTS failed_login_attempts (
 );
 
 -- Index untuk performa query
-CREATE INDEX IF NOT EXISTS idx_failed_login_ip ON failed_login_attempts(ip_address);
-CREATE INDEX IF NOT EXISTS idx_failed_login_blocked ON failed_login_attempts(blocked_until) WHERE blocked_until IS NOT NULL;
+CREATE INDEX idx_failed_login_ip ON failed_login_attempts(ip_address);
+CREATE INDEX idx_failed_login_blocked ON failed_login_attempts(blocked_until) WHERE blocked_until IS NOT NULL;
 
 -- Enable RLS (Row Level Security)
 ALTER TABLE failed_login_attempts ENABLE ROW LEVEL SECURITY;
