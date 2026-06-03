@@ -79,10 +79,21 @@ def _find_key(kid: str) -> Optional[dict[str, Any]]:
     for key in jwks.get("keys", []):
         if key.get("kid") == kid:
             return key
+    
     # Tidak ketemu — refresh cache (kasus rotation)
+    logger.info("Key kid '%s' tidak ditemukan di cache, refresh JWKS...", kid)
     global _jwks_cache
     _jwks_cache = None
     jwks = _fetch_jwks()
+    
+    # Log semua kid yang tersedia untuk debugging
+    available_kids = [k.get("kid") for k in jwks.get("keys", [])]
+    logger.warning(
+        "Kid '%s' tidak ditemukan. Available kids: %s",
+        kid,
+        available_kids,
+    )
+    
     for key in jwks.get("keys", []):
         if key.get("kid") == kid:
             return key
@@ -106,6 +117,10 @@ def _decode_jwt(token: str) -> TokenPayload:
     """
     Dekode dan validasi token JWT.
     Otomatis pilih skema HS256 (legacy) atau ES256 (modern) berdasarkan header.
+    
+    Fallback strategy:
+    1. Coba dengan public key dari JWKS (jika ada kid)
+    2. Jika kid tidak ditemukan, fallback ke HS256 dengan JWT_SECRET
     """
     settings = get_settings()
 
@@ -153,15 +168,27 @@ def _decode_jwt(token: str) -> TokenPayload:
 
             key_data = _find_key(kid)
             if key_data is None:
-                raise JWTError(f"Public key dengan kid '{kid}' tidak ditemukan")
-
-            public_key = jwk.construct(key_data)
-            payload = jwt.decode(
-                token,
-                public_key,
-                algorithms=[alg],
-                options={"verify_aud": False},
-            )
+                # Fallback: Coba dengan HS256 untuk token lama yang masih valid
+                logger.warning("⚠️  Kid '%s' tidak ditemukan di JWKS, mencoba fallback HS256...", kid)
+                try:
+                    payload = jwt.decode(
+                        token,
+                        settings.SUPABASE_JWT_SECRET,
+                        algorithms=["HS256"],
+                        options={"verify_aud": False},
+                    )
+                    logger.info("✅ Token berhasil divalidasi dengan fallback HS256")
+                except JWTError as fallback_exc:
+                    logger.warning("❌ Fallback HS256 juga gagal: %s", str(fallback_exc))
+                    raise JWTError(f"Public key dengan kid '{kid}' tidak ditemukan dan fallback HS256 gagal")
+            else:
+                public_key = jwk.construct(key_data)
+                payload = jwt.decode(
+                    token,
+                    public_key,
+                    algorithms=[alg],
+                    options={"verify_aud": False},
+                )
 
         return TokenPayload(**payload)
 
