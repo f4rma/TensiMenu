@@ -33,5 +33,4 @@ node_modules/
 docs/
 
 # Folder kerja upload gambar (jangan commit foto/asset besar)
-backend/food_images_input/
 backend/.hypothesis/
