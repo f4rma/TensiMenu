@@ -169,7 +169,7 @@ def _decode_jwt(token: str) -> TokenPayload:
             key_data = _find_key(kid)
             if key_data is None:
                 # Fallback: Coba dengan HS256 untuk token lama yang masih valid
-                logger.info("Kid '%s' tidak ditemukan, fallback ke HS256", kid)
+                logger.warning("⚠️  Kid '%s' tidak ditemukan di JWKS, mencoba fallback HS256...", kid)
                 try:
                     payload = jwt.decode(
                         token,
@@ -177,9 +177,9 @@ def _decode_jwt(token: str) -> TokenPayload:
                         algorithms=["HS256"],
                         options={"verify_aud": False},
                     )
-                    logger.info("Token berhasil divalidasi dengan fallback HS256")
+                    logger.info("✅ Token berhasil divalidasi dengan fallback HS256")
                 except JWTError as fallback_exc:
-                    logger.warning("Fallback HS256 juga gagal: %s", str(fallback_exc))
+                    logger.warning("❌ Fallback HS256 juga gagal: %s", str(fallback_exc))
                     raise JWTError(f"Public key dengan kid '{kid}' tidak ditemukan dan fallback HS256 gagal")
             else:
                 public_key = jwk.construct(key_data)
