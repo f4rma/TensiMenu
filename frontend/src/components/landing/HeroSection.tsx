@@ -66,7 +66,7 @@ export default function HeroSection() {
                 href="/register"
                 className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-primary px-7 py-3.5 text-sm font-semibold text-white shadow-brand-cta transition-all duration-200 hover:bg-brand-primary-dark hover:shadow-brand-cta-hover active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 focus-visible:ring-offset-brand-cream sm:w-auto md:text-base"
               >
-                Mulai gratis
+                Mulai Sekarang
                 <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
               </Link>
               <Link

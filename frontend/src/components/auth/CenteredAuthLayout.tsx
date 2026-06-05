@@ -49,7 +49,7 @@ export default function CenteredAuthLayout({
           <div className="flex items-center gap-2">
             <Logo size="sm" />
             <p className="hidden text-xs text-brand-charcoal-muted md:inline">
-              · © 2026 TensiMenu. Clinical precision in every meal.
+              · © 2026 TensiMenu. Proyek capstone berbasis riset DASH Diet oleh Tim Pijak GM-031.
             </p>
           </div>
           <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-brand-charcoal-muted">
@@ -71,7 +71,7 @@ export default function CenteredAuthLayout({
             </li>
             <li>
               <a
-                href="mailto:hello@tensimenu.id"
+                href="mailto:tensimenu@gmail.com"
                 className="transition-colors duration-150 hover:text-brand-primary"
               >
                 Contact Support

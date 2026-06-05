@@ -116,7 +116,7 @@ export default function PrivacyPolicyPage() {
             <p>
               Untuk pertanyaan terkait privasi atau permintaan data, hubungi
               kami di{" "}
-              <a href="mailto:hello@tensimenu.id">hello@tensimenu.id</a>.
+              <a href="mailto:tensimenu@gmail.com">tensimenu@gmail.com</a>.
             </p>
           ),
         },

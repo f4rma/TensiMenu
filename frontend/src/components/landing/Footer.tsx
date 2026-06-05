@@ -8,7 +8,7 @@ const LINK_GROUPS = [
     links: [
       { href: "#features", label: "Fitur" },
       { href: "#dash-diet", label: "DASH Diet" },
-      { href: "/register", label: "Mulai Gratis" },
+      { href: "/register", label: "Mulai Sekarang" },
     ],
   },
   {
@@ -69,14 +69,14 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-6 sm:flex-row sm:items-center">
           <p className="text-xs text-white/45">
-            © 2026 TensiMenu. Proyek capstone berbasis riset DASH Diet.
+            © 2026 TensiMenu. Proyek capstone berbasis riset DASH Diet oleh Tim Pijak GM-031.
           </p>
           <Link
-            href="mailto:hello@tensimenu.id"
+            href="mailto:tensimenu@gmail.com"
             className="inline-flex items-center gap-2 text-xs text-white/60 transition-colors duration-150 hover:text-white"
           >
             <Mail className="h-3.5 w-3.5" />
-            hello@tensimenu.id
+            tensimenu@gmail.com
           </Link>
         </div>
       </div>

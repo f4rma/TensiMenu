@@ -27,7 +27,7 @@ export default function CtaSection() {
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/85 md:text-base">
               Buat profil kesehatanmu, dan TensiMenu langsung menyusun
-              rekomendasi menu DASH yang dipersonalisasi. Gratis untuk memulai.
+              rekomendasi menu DASH yang dipersonalisasi.
             </p>
 
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
@@ -35,7 +35,7 @@ export default function CtaSection() {
                 href="/register"
                 className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-cream px-7 py-3.5 text-sm font-semibold text-brand-primary shadow-glass-md transition-all duration-200 hover:bg-white hover:shadow-glass-lg active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-primary sm:w-auto md:text-base"
               >
-                Buat akun gratis
+                Buat Akun
                 <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
               </Link>
               <Link
