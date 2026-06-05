@@ -108,7 +108,7 @@ export default function TermsOfServicePage() {
           body: (
             <p>
               Pertanyaan terkait ketentuan layanan dapat diajukan ke{" "}
-              <a href="mailto:hello@tensimenu.id">hello@tensimenu.id</a>.
+              <a href="mailto:tensimenu@gmail.com">tensimenu@gmail.com</a>.
             </p>
           ),
         },
