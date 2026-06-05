@@ -35,6 +35,14 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXTAUTH_URL ?? "http://localhost:3000"
   ),
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
   openGraph: {
     type: "website",
     locale: "id_ID",
@@ -42,6 +50,21 @@ export const metadata: Metadata = {
     description:
       "Sistem rekomendasi makanan lokal Indonesia berbasis DASH Diet untuk penderita hipertensi.",
     siteName: "TensiMenu",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "TensiMenu - Rekomendasi Makanan DASH",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TensiMenu — Rekomendasi Makanan DASH untuk Hipertensi",
+    description:
+      "Sistem rekomendasi makanan lokal Indonesia berbasis DASH Diet untuk penderita hipertensi.",
+    images: ["/og-image.png"],
   },
 };
 
