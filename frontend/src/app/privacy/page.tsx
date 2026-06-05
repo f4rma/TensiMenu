@@ -4,7 +4,7 @@ import LegalPage from "@/components/legal/LegalPage";
 export const metadata: Metadata = {
   title: "Kebijakan Privasi",
   description:
-    "Kebijakan privasi TensiMenu — bagaimana kami mengumpulkan, menggunakan, dan melindungi data kesehatan Anda.",
+    "Kebijakan privasi TensiMenu - bagaimana kami mengumpulkan, menggunakan, dan melindungi data kesehatan Anda.",
 };
 
 export default function PrivacyPolicyPage() {

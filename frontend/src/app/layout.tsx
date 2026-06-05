@@ -18,7 +18,7 @@ const irishGrover = Irish_Grover({
 
 export const metadata: Metadata = {
   title: {
-    default: "TensiMenu — Rekomendasi Makanan DASH untuk Hipertensi",
+    default: "TensiMenu | Rekomendasi Makanan DASH untuk Hipertensi",
     template: "%s | TensiMenu",
   },
   description:
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "id_ID",
-    title: "TensiMenu — Rekomendasi Makanan DASH untuk Hipertensi",
+    title: "TensiMenu | Rekomendasi Makanan DASH untuk Hipertensi",
     description:
       "Sistem rekomendasi makanan lokal Indonesia berbasis DASH Diet untuk penderita hipertensi.",
     siteName: "TensiMenu",
@@ -55,13 +55,13 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "TensiMenu - Rekomendasi Makanan DASH",
+        alt: "TensiMenu | Rekomendasi Makanan DASH",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "TensiMenu — Rekomendasi Makanan DASH untuk Hipertensi",
+    title: "TensiMenu | Rekomendasi Makanan DASH untuk Hipertensi",
     description:
       "Sistem rekomendasi makanan lokal Indonesia berbasis DASH Diet untuk penderita hipertensi.",
     images: ["/og-image.png"],
