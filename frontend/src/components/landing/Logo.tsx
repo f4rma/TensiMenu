@@ -1,4 +1,4 @@
-import { Activity } from "lucide-react";
+import Image from "next/image";
 
 interface LogoProps {
   size?: "sm" | "md" | "lg";
@@ -7,14 +7,14 @@ interface LogoProps {
 }
 
 const SIZES = {
-  sm: { circle: "h-9 w-9", icon: "h-[18px] w-[18px]", text: "text-base" },
-  md: { circle: "h-10 w-10", icon: "h-5 w-5", text: "text-lg" },
-  lg: { circle: "h-12 w-12", icon: "h-6 w-6", text: "text-xl" },
+  sm: { size: 36, text: "text-base" },
+  md: { size: 40, text: "text-lg" },
+  lg: { size: 48, text: "text-xl" },
 } as const;
 
 /**
- * Logo TensiMenu — mark bulat dengan ikon pulse (Activity) yang merepresentasikan
- * pemantauan tekanan darah. Bersih dan modern, konsisten dengan brand emerald.
+ * Logo TensiMenu — menggunakan logo official dari public/images/logo.png
+ * yang merepresentasikan pemantauan tekanan darah dan makanan sehat.
  */
 export default function Logo({
   size = "sm",
@@ -25,11 +25,14 @@ export default function Logo({
 
   return (
     <div className={`flex items-center gap-2.5 ${className}`}>
-      <div
-        className={`${s.circle} flex items-center justify-center rounded-full bg-brand-primary text-white shadow-[0_2px_8px_rgba(43,124,97,0.25)]`}
-      >
-        <Activity className={s.icon} strokeWidth={2.5} />
-      </div>
+      <Image
+        src="/images/logo.png"
+        alt="TensiMenu Logo"
+        width={s.size}
+        height={s.size}
+        className="h-auto w-auto"
+        priority
+      />
 
       {showWordmark && (
         <span
