@@ -120,7 +120,18 @@ export default function RegisterForm() {
         return;
       }
 
-      // Sukses — redirect ke profile setup
+      // Sukses — Backend sudah return access_token (auto-login!)
+      const authData = await response.json();
+      
+      // Simpan token ke localStorage
+      if (authData.access_token) {
+        localStorage.setItem("access_token", authData.access_token);
+      }
+      if (authData.refresh_token) {
+        localStorage.setItem("refresh_token", authData.refresh_token);
+      }
+      
+      // Redirect ke profile setup (user sudah login otomatis!)
       router.push("/profile?onboarding=1");
     } catch {
       setErrors({

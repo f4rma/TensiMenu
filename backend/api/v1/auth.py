@@ -35,25 +35,29 @@ _INVALID_CREDENTIALS_CODE = "INVALID_CREDENTIALS"
 
 @router.post(
     "/register",
-    response_model=UserRegisterResponse,
+    response_model=UserLoginResponse,  # ← Changed from UserRegisterResponse
     status_code=status.HTTP_201_CREATED,
-    summary="Registrasi pengguna baru",
+    summary="Registrasi pengguna baru + auto-login",
 )
 @limiter.limit("10/minute")
 async def register(
     request: Request, response: Response, body: UserRegisterRequest
-) -> UserRegisterResponse:
+) -> UserLoginResponse:  # ← Changed return type
     """
-    Buat akun pengguna baru via Supabase Auth.
+    Buat akun pengguna baru via Supabase Auth dan langsung login (auto-login).
+    
+    Modern UX: Tidak perlu konfirmasi email sebelum login.
+    Email verification berjalan di background (opsional untuk fitur tertentu).
 
-    - HTTP 201: registrasi berhasil
+    - HTTP 201: registrasi + login berhasil (return access_token)
     - HTTP 409: email sudah terdaftar
     - HTTP 422: validasi field gagal (otomatis dari Pydantic)
     """
     supabase = get_supabase()
 
     try:
-        response = supabase.auth.sign_up(
+        # sign_up with auto-confirm (via service role key)
+        auth_response = supabase.auth.sign_up(
             {
                 "email": body.email,
                 "password": body.password,
@@ -65,6 +69,19 @@ async def register(
                 },
             }
         )
+        
+        # Auto-confirm email menggunakan admin API (service role key)
+        if auth_response.user and auth_response.user.id:
+            try:
+                # Update user via admin API to confirm email
+                supabase.auth.admin.update_user_by_id(
+                    auth_response.user.id,
+                    {"email_confirm": True}
+                )
+                logger.info("Email auto-confirmed untuk frictionless onboarding: %s", body.email)
+            except Exception as exc:
+                logger.warning("Gagal auto-confirm email: %s", str(exc))
+                
     except Exception as exc:
         error_msg = str(exc).lower()
         if "already registered" in error_msg or "already exists" in error_msg:
@@ -81,7 +98,7 @@ async def register(
             detail={"error": "Registrasi gagal. Silakan coba lagi.", "code": "REGISTER_FAILED"},
         )
 
-    if response.user is None:
+    if auth_response.user is None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail={
@@ -90,10 +107,37 @@ async def register(
             },
         )
 
-    logger.info("Pengguna baru terdaftar: %s", body.email)
-    return UserRegisterResponse(
-        user_id=str(response.user.id),
-        email=response.user.email or body.email,
+    logger.info("Pengguna baru terdaftar dan auto-login: %s", body.email)
+    
+    # Return session (auto-login)
+    user = auth_response.user
+    session = auth_response.session
+    
+    if session is None:
+        # Jika session tidak ada (edge case), buat session baru dengan sign in
+        try:
+            login_response = supabase.auth.sign_in_with_password(
+                {"email": body.email, "password": body.password}
+            )
+            session = login_response.session
+        except Exception as exc:
+            logger.error("Gagal create session setelah register: %s", str(exc))
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail={"error": "Registrasi berhasil tapi gagal login otomatis. Silakan login manual.", "code": "AUTO_LOGIN_FAILED"},
+            )
+    
+    name: str | None = None
+    if user.user_metadata:
+        name = user.user_metadata.get("full_name") or user.user_metadata.get("name")
+    
+    return UserLoginResponse(
+        user_id=str(user.id),
+        email=user.email or body.email,
+        name=name,
+        access_token=session.access_token,
+        refresh_token=session.refresh_token,
+        expires_at=session.expires_at,
     )
 
 
@@ -311,3 +355,36 @@ async def reset_password_confirm(
                 "code": "PASSWORD_UPDATE_FAILED",
             },
         )
+
+
+@router.post(
+    "/resend-confirmation",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Kirim ulang email konfirmasi",
+)
+@limiter.limit("3/minute")
+async def resend_confirmation(
+    request: Request, response: Response, body: PasswordResetRequest
+) -> None:
+    """
+    Kirim ulang email konfirmasi untuk user yang belum mengkonfirmasi emailnya.
+    
+    Best practice: selalu kembalikan 204 (jangan ekspos apakah email terdaftar atau tidak).
+    Rate limit: 3 request per menit untuk mencegah spam.
+    
+    HTTP 204: email konfirmasi dikirim (atau email tidak ditemukan - tidak diberitahu ke client).
+    """
+    supabase = get_supabase()
+    
+    try:
+        # Resend confirmation email via Supabase
+        supabase.auth.resend(
+            type="signup",
+            email=body.email,
+        )
+        logger.info("Email konfirmasi dikirim ulang ke: %s", body.email)
+    except Exception as exc:
+        # Log tapi jangan ekspos ke client (security best practice)
+        logger.warning("Resend confirmation error untuk %s: %s", body.email, str(exc))
+    
+    # Selalu return 204 (jangan kasih tahu apakah email ada atau tidak)
