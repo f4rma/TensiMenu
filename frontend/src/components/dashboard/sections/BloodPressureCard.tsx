@@ -1,31 +1,13 @@
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { classifyBP, CATEGORY_STYLES } from "@/components/blood-pressure/types";
 
 interface BloodPressureCardProps {
   systolic: number | null;
   diastolic: number | null;
   measuredAt?: string;
 }
-
-type BPCategory = "Normal" | "Elevated" | "Pre-Hipertensi" | "Hipertensi 1" | "Hipertensi 2" | "Krisis";
-
-function classifyBP(systolic: number, diastolic: number): BPCategory {
-  if (systolic >= 180 || diastolic >= 120) return "Krisis";
-  if (systolic >= 140 || diastolic >= 90) return "Hipertensi 2";
-  if (systolic >= 130 || diastolic >= 80) return "Hipertensi 1";
-  if (systolic >= 120) return "Pre-Hipertensi";
-  return "Normal";
-}
-
-const CATEGORY_STYLE: Record<BPCategory, { dot: string; label: string }> = {
-  Normal: { dot: "bg-emerald-500", label: "text-emerald-700" },
-  Elevated: { dot: "bg-amber-500", label: "text-amber-700" },
-  "Pre-Hipertensi": { dot: "bg-amber-500", label: "text-amber-700" },
-  "Hipertensi 1": { dot: "bg-orange-500", label: "text-orange-700" },
-  "Hipertensi 2": { dot: "bg-rose-500", label: "text-rose-700" },
-  Krisis: { dot: "bg-rose-600 animate-pulse", label: "text-rose-800" },
-};
 
 /**
  * Card "Tekanan Darah Terakhir" di kolom kanan Beranda.
@@ -38,7 +20,7 @@ export default function BloodPressureCard({
 }: BloodPressureCardProps) {
   const hasData = typeof systolic === "number" && typeof diastolic === "number";
   const category = hasData ? classifyBP(systolic!, diastolic!) : null;
-  const style = category ? CATEGORY_STYLE[category] : null;
+  const style = category ? CATEGORY_STYLES[category] : null;
 
   return (
     <div className="rounded-3xl bg-white border border-brand-charcoal/5 p-5 shadow-glass-sm">
@@ -58,9 +40,9 @@ export default function BloodPressureCard({
           {category && style && (
             <span className={cn(
               "mt-2 inline-flex items-center gap-1.5 rounded-full bg-brand-charcoal/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider",
-              style.label
+              style.chipText
             )}>
-              <span className={cn("h-1.5 w-1.5 rounded-full", style.dot)} />
+              <span className={cn("h-1.5 w-1.5 rounded-full", style.dotBg)} />
               {category}
             </span>
           )}

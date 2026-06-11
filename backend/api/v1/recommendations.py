@@ -28,6 +28,7 @@ from services.dash_score_service import (
     get_dash_category,
 )
 from services.bp_resolver import get_representative_systolic
+from services.bp_classifier import classify_bp, get_bp_advisory
 from services.nutrition_calculator import calculate_personal_targets
 from services.serving_sizes import DEFAULT_SERVING_G, get_default_serving_g
 
@@ -322,6 +323,20 @@ async def get_recommendations(
 
         # 8. Nutrition warnings — kalkulasi total per porsi standar
         warnings: list[str] = []
+
+        # Advisory sesuai kategori tekanan darah (hipotensi / stage 1 / 2 / krisis).
+        # Pakai sistolik representatif (rata-rata 3 reading terakhir) + diastolik
+        # profil agar selaras dengan kategori yang ditampilkan di UI.
+        rep_systolic = get_representative_systolic(
+            user_id=current_user.sub,
+            profile_systolic=profile.get("systolic_bp"),
+        )
+        rep_diastolic = profile.get("diastolic_bp")
+        if rep_systolic is not None and rep_diastolic is not None:
+            bp_category = classify_bp(int(rep_systolic), int(rep_diastolic))
+            advisory = get_bp_advisory(bp_category)
+            if advisory:
+                warnings.append(advisory)
 
         def _scaled_total(nutrient: str) -> float:
             return sum(

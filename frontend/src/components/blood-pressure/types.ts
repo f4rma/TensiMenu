@@ -12,6 +12,7 @@ export const PERIOD_OPTIONS: { value: Period; label: string; days: number }[] = 
 ];
 
 export type BPCategory =
+  | "Hipotensi"
   | "Normal"
   | "Elevated"
   | "Hipertensi Stage 1"
@@ -29,14 +30,19 @@ export interface BPRecord {
 }
 
 /**
- * Klasifikasi BP berdasarkan panduan JNC 8 / AHA 2017.
+ * Klasifikasi BP berdasarkan panduan JNC 8 / AHA 2017, plus deteksi hipotensi.
  * Dipakai konsisten di seluruh aplikasi (Req. 6.4).
+ *
+ * Kondisi tinggi diperiksa lebih dulu agar sistolik tinggi dengan diastolik
+ * rendah (mis. 150/55) tetap masuk kategori hipertensi, bukan hipotensi.
+ * Hipotensi: sistolik <= 90 atau diastolik <= 60 (mis. 90/60).
  */
 export function classifyBP(systolic: number, diastolic: number): BPCategory {
   if (systolic >= 180 || diastolic >= 120) return "Krisis Hipertensi";
   if (systolic >= 140 || diastolic >= 90) return "Hipertensi Stage 2";
   if (systolic >= 130 || diastolic >= 80) return "Hipertensi Stage 1";
   if (systolic >= 120) return "Elevated";
+  if (systolic <= 90 || diastolic <= 60) return "Hipotensi";
   return "Normal";
 }
 
@@ -44,6 +50,12 @@ export const CATEGORY_STYLES: Record<
   BPCategory,
   { dotBg: string; chipBg: string; chipText: string; label: string }
 > = {
+  Hipotensi: {
+    dotBg: "bg-sky-500",
+    chipBg: "bg-sky-50 border-sky-200",
+    chipText: "text-sky-700",
+    label: "HIPOTENSI",
+  },
   Normal: {
     dotBg: "bg-emerald-500",
     chipBg: "bg-emerald-50 border-emerald-200",
