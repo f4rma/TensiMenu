@@ -32,6 +32,13 @@ node_modules/
 
 docs/
 
+# Documentation files (local development docs)
+*.md
+!README.md
+!backend/README.md
+!frontend/README.md
+!notebooks/README.md
+
 # Folder kerja upload gambar (jangan commit foto/asset besar)
 backend/food_images_input/
 backend/.hypothesis/
