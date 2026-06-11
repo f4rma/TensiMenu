@@ -26,11 +26,16 @@ notebooks/artifacts/
 # Node
 node_modules/
 .next/
-
-# Kiro (AI IDE) — jangan commit konfigurasi/spec lokal
 .kiro/
-
 docs/
 
-# Folder kerja upload gambar (jangan commit foto/asset besar)
+# Documentation files
+*.md
+!README.md
+!backend/README.md
+!frontend/README.md
+!notebooks/README.md
+
+# Folder kerja upload gambar 
+backend/food_images_input/
 backend/.hypothesis/
