@@ -29,7 +29,7 @@ HYPOTENSION_DIASTOLIC = 60
 # --- Label kategori — HARUS sama dengan BPCategory di frontend ---
 CAT_HYPOTENSION = "Hipotensi"
 CAT_NORMAL = "Normal"
-CAT_ELEVATED = "Elevated"
+CAT_ELEVATED = "Pra-Hipertensi"
 CAT_STAGE1 = "Hipertensi Stage 1"
 CAT_STAGE2 = "Hipertensi Stage 2"
 CAT_CRISIS = "Krisis Hipertensi"
@@ -82,6 +82,6 @@ def get_bp_advisory(category: str) -> Optional[str]:
     """
     Pesan saran singkat sesuai kategori BP untuk ditampilkan bersama
     rekomendasi makanan. Mengembalikan None jika tidak ada catatan khusus
-    (mis. Normal / Elevated).
+    (mis. Normal / Pra-Hipertensi).
     """
     return BP_ADVISORY.get(category)

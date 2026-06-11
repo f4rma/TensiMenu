@@ -14,7 +14,7 @@ export const PERIOD_OPTIONS: { value: Period; label: string; days: number }[] = 
 export type BPCategory =
   | "Hipotensi"
   | "Normal"
-  | "Elevated"
+  | "Pra-Hipertensi"
   | "Hipertensi Stage 1"
   | "Hipertensi Stage 2"
   | "Krisis Hipertensi";
@@ -41,7 +41,7 @@ export function classifyBP(systolic: number, diastolic: number): BPCategory {
   if (systolic >= 180 || diastolic >= 120) return "Krisis Hipertensi";
   if (systolic >= 140 || diastolic >= 90) return "Hipertensi Stage 2";
   if (systolic >= 130 || diastolic >= 80) return "Hipertensi Stage 1";
-  if (systolic >= 120) return "Elevated";
+  if (systolic >= 120) return "Pra-Hipertensi";
   if (systolic <= 90 || diastolic <= 60) return "Hipotensi";
   return "Normal";
 }
@@ -62,11 +62,11 @@ export const CATEGORY_STYLES: Record<
     chipText: "text-emerald-700",
     label: "NORMAL",
   },
-  Elevated: {
+  "Pra-Hipertensi": {
     dotBg: "bg-amber-500",
     chipBg: "bg-amber-50 border-amber-200",
     chipText: "text-amber-700",
-    label: "ELEVATED",
+    label: "PRA-HIPERTENSI",
   },
   "Hipertensi Stage 1": {
     dotBg: "bg-orange-500",
