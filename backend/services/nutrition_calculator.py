@@ -34,7 +34,8 @@ DEFAULT_PAL = PAL_FACTORS[DEFAULT_ACTIVITY_LEVEL]
 FAT_ENERGY_FRACTION = 0.27
 
 # Threshold tekanan darah untuk pengetatan natrium.
-# AHA/ACC 2017: Stage 2 hipertensi mulai di sistolik 140 mmHg.
+# AHA/ACC 2017: ambang sistolik per stage hipertensi.
+HYPERTENSION_STAGE1_SYSTOLIC = 130
 HYPERTENSION_STAGE2_SYSTOLIC = 140
 
 
@@ -88,7 +89,9 @@ def calculate_personal_targets(
     Prioritas penyesuaian (yang lebih ketat menang):
       1. CKD: Na 2000, K 2000, P 800.
       2. Hipertensi Stage 2 (sistolik ≥140): Na 1500.
-         Kalau user juga CKD, ambil yang paling ketat (1500).
+      3. Hipertensi Stage 1 (sistolik 130-139): Na 2000.
+         Kalau user juga CKD, ambil yang paling ketat.
+      Hipotensi / Normal / Elevated (sistolik <130): Na tetap baseline 2300.
 
     Args:
         gender: "laki-laki" atau "perempuan"
@@ -139,10 +142,17 @@ def calculate_personal_targets(
         targets["potassium_mg"] = 2000.0
         targets["phosphorus_mg"] = 800.0
 
-    # Penyesuaian hipertensi (DASH-Sodium / AHA 2017)
-    # Berlaku saat sistolik ≥140 mmHg (Stage 2). Ambang lebih ketat dari
-    # CKD untuk natrium, jadi pakai yang lebih rendah dari keduanya.
-    if systolic_bp is not None and systolic_bp >= HYPERTENSION_STAGE2_SYSTOLIC:
-        targets["sodium_mg"] = min(targets["sodium_mg"], 1500.0)
+    # Penyesuaian hipertensi (DASH-Sodium / AHA 2017), bertingkat per stage.
+    # Ambil ambang natrium yang paling ketat antara kondisi BP dan CKD.
+    #   - Stage 2+ (sistolik >=140): natrium 1500 mg
+    #   - Stage 1 (sistolik 130-139): natrium 2000 mg
+    #   - <130 (Normal/Elevated/Hipotensi): tetap baseline (tidak dibatasi)
+    # Catatan: penderita hipotensi sengaja TIDAK dibatasi natriumnya — diet
+    # penurun tekanan darah kurang sesuai untuk kondisi tekanan darah rendah.
+    if systolic_bp is not None:
+        if systolic_bp >= HYPERTENSION_STAGE2_SYSTOLIC:
+            targets["sodium_mg"] = min(targets["sodium_mg"], 1500.0)
+        elif systolic_bp >= HYPERTENSION_STAGE1_SYSTOLIC:
+            targets["sodium_mg"] = min(targets["sodium_mg"], 2000.0)
 
     return targets
