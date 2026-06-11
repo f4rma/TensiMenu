@@ -91,7 +91,7 @@ def calculate_personal_targets(
       2. Hipertensi Stage 2 (sistolik ≥140): Na 1500.
       3. Hipertensi Stage 1 (sistolik 130-139): Na 2000.
          Kalau user juga CKD, ambil yang paling ketat.
-      Hipotensi / Normal / Elevated (sistolik <130): Na tetap baseline 2300.
+      Hipotensi / Normal / Pra-Hipertensi (sistolik <130): Na tetap baseline 2300.
 
     Args:
         gender: "laki-laki" atau "perempuan"
@@ -146,7 +146,7 @@ def calculate_personal_targets(
     # Ambil ambang natrium yang paling ketat antara kondisi BP dan CKD.
     #   - Stage 2+ (sistolik >=140): natrium 1500 mg
     #   - Stage 1 (sistolik 130-139): natrium 2000 mg
-    #   - <130 (Normal/Elevated/Hipotensi): tetap baseline (tidak dibatasi)
+    #   - <130 (Normal/Pra-Hipertensi/Hipotensi): tetap baseline (tidak dibatasi)
     # Catatan: penderita hipotensi sengaja TIDAK dibatasi natriumnya — diet
     # penurun tekanan darah kurang sesuai untuk kondisi tekanan darah rendah.
     if systolic_bp is not None:
