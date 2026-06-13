@@ -44,7 +44,9 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
             "pl-11 pr-10 text-sm text-brand-charcoal placeholder:text-brand-charcoal-muted",
             "transition-all duration-150",
             "focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15",
-            "shadow-glass-sm"
+            "shadow-glass-sm",
+            // Hide browser default search clear button
+            "[&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden"
           )}
         />
 

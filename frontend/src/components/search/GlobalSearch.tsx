@@ -58,23 +58,31 @@ export default function GlobalSearch({ onSelectFood }: GlobalSearchProps) {
       const timer = setTimeout(() => inputRef.current?.focus(), 100);
       return () => clearTimeout(timer);
     } else {
-      // Reset query saat tutup
-      setQuery("");
+      // Reset query saat tutup modal search (bukan saat buka detail)
+      if (!selectedFood) {
+        setQuery("");
+      }
     }
-  }, [open]);
+  }, [open, selectedFood]);
 
   const handleSelect = (food: FoodSearchResult) => {
     if (onSelectFood) {
       // Override mode — caller handle behavior
       onSelectFood(food);
       setOpen(false);
+      setQuery(""); // reset query
       return;
     }
 
-    // Default: buka detail modal
+    // Default: buka detail modal, tutup search tapi jangan reset query
     setSelectedFood(food);
-    setOpen(false);
-    setQuery(""); // reset query agar saat user buka search lagi, fresh
+    // Query tidak di-reset agar saat user kembali dari detail, hasil pencarian masih ada
+  };
+
+  // Handler untuk menutup detail modal dan kembali ke search
+  const handleCloseDetail = () => {
+    setSelectedFood(null);
+    setOpen(true); // buka kembali search modal
   };
 
   return (
@@ -150,7 +158,7 @@ export default function GlobalSearch({ onSelectFood }: GlobalSearchProps) {
       {/* Detail modal — muncul setelah klik hasil pencarian */}
       <FoodDetailModal
         food={selectedFood}
-        onClose={() => setSelectedFood(null)}
+        onClose={handleCloseDetail}
       />
     </>
   );
