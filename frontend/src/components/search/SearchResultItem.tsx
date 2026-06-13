@@ -3,6 +3,7 @@
 import { AlertTriangle, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatFoodName } from "@/lib/foodNameFormatter";
+import FoodImage from "@/components/recommendations/FoodImage";
 import type { FoodSearchResult } from "./types";
 
 interface SearchResultItemProps {
@@ -29,9 +30,20 @@ export default function SearchResultItem({
       onClick={() => onClick?.(food)}
       className="group flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors duration-150 hover:bg-brand-primary/5 focus-visible:outline-none focus-visible:bg-brand-primary/5"
     >
-      {/* DASH score circle */}
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-charcoal/5">
-        <span className={cn("text-xs font-bold tabular-nums", dashColor)}>
+      {/* Food image thumbnail */}
+      <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl">
+        <FoodImage
+          imageUrl={food.image_url}
+          name={food.name}
+          category={food.category}
+          variant="sm"
+          className="rounded-xl"
+        />
+      </div>
+
+      {/* DASH score badge */}
+      <div className="absolute top-2.5 left-11 flex h-5 w-5 items-center justify-center rounded-md bg-white/90 backdrop-blur-sm shadow-sm ring-1 ring-brand-charcoal/5">
+        <span className={cn("text-[9px] font-bold tabular-nums leading-none", dashColor)}>
           {food.dash_score !== null ? food.dash_score.toFixed(0) : "—"}
         </span>
       </div>
