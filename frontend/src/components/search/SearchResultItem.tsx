@@ -41,13 +41,6 @@ export default function SearchResultItem({
         />
       </div>
 
-      {/* DASH score badge */}
-      <div className="absolute top-2.5 left-11 flex h-5 w-5 items-center justify-center rounded-md bg-white/90 backdrop-blur-sm shadow-sm ring-1 ring-brand-charcoal/5">
-        <span className={cn("text-[9px] font-bold tabular-nums leading-none", dashColor)}>
-          {food.dash_score !== null ? food.dash_score.toFixed(0) : "—"}
-        </span>
-      </div>
-
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
