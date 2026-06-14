@@ -79,12 +79,7 @@ export default function SplashHero() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col items-center px-4 pt-6 pb-10">
-        {/* Navbar */}
-        <nav className="mb-8 w-full max-w-3xl">
-          <div className="h-12 rounded-full border border-white/15 bg-white/5 backdrop-blur-md" />
-        </nav>
-
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col items-center px-4 pt-16 pb-10">
         {/* Title */}
         <h1 className="mb-3 text-center font-[family-name:var(--font-irish-grover)] text-6xl tracking-wider text-white drop-shadow-2xl md:text-8xl">
           TENSI MENU

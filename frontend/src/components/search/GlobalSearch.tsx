@@ -91,11 +91,11 @@ export default function GlobalSearch({ onSelectFood }: GlobalSearchProps) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group inline-flex items-center gap-2.5 rounded-2xl border border-brand-charcoal/10 bg-white px-3.5 py-2 text-sm text-brand-charcoal-muted transition-all duration-150 hover:border-brand-primary/30 hover:bg-brand-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+        className="group inline-flex h-10 w-10 items-center justify-center rounded-xl border border-brand-charcoal/10 bg-white text-brand-charcoal-muted transition-all duration-150 hover:border-brand-primary/30 hover:bg-brand-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary sm:h-auto sm:w-auto sm:gap-2.5 sm:rounded-2xl sm:px-3.5 sm:py-2"
         aria-label="Cari makanan"
       >
-        <Search className="h-4 w-4" />
-        <span className="hidden sm:inline">Cari makanan...</span>
+        <Search className="h-4 w-4 shrink-0" />
+        <span className="hidden sm:inline text-sm">Cari makanan...</span>
         <span className="hidden sm:inline-flex items-center gap-0.5 rounded-md border border-brand-charcoal/15 bg-brand-cream-soft px-1.5 py-0.5 text-[10px] font-medium text-brand-charcoal-muted">
           <Command className="h-2.5 w-2.5" />K
         </span>
@@ -107,7 +107,7 @@ export default function GlobalSearch({ onSelectFood }: GlobalSearchProps) {
           role="dialog"
           aria-modal="true"
           aria-label="Pencarian makanan"
-          className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-[15vh] pb-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-start justify-center px-3 pt-4 pb-4 sm:px-4 sm:pt-[15vh] animate-in fade-in duration-200"
         >
           {/* Backdrop */}
           <div
@@ -117,7 +117,7 @@ export default function GlobalSearch({ onSelectFood }: GlobalSearchProps) {
           />
 
           {/* Dialog */}
-          <div className="relative w-full max-w-xl animate-in fade-in slide-in-from-bottom-3 duration-300 rounded-3xl bg-white shadow-glass-lg overflow-hidden flex flex-col max-h-[70vh]">
+          <div className="relative w-full max-w-xl animate-in fade-in slide-in-from-bottom-3 duration-300 rounded-3xl bg-white shadow-glass-lg overflow-hidden flex flex-col max-h-[92dvh] sm:max-h-[70vh]">
             {/* Search input */}
             <div className="border-b border-brand-charcoal/5 p-3">
               <SearchInput
@@ -142,14 +142,21 @@ export default function GlobalSearch({ onSelectFood }: GlobalSearchProps) {
 
             {/* Footer hint */}
             <div className="flex items-center justify-between gap-3 border-t border-brand-charcoal/5 bg-brand-cream-soft px-4 py-2 text-[10px] text-brand-charcoal-muted">
-              <span>
+              <span className="hidden sm:inline">
                 Tekan{" "}
                 <kbd className="rounded border border-brand-charcoal/15 bg-white px-1 py-0.5 font-mono">
                   ESC
                 </kbd>{" "}
                 untuk tutup
               </span>
-              <span className="hidden sm:inline">{results.length} hasil</span>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="rounded-lg px-2 py-1 text-[11px] font-medium text-brand-charcoal-muted hover:bg-brand-charcoal/5 sm:hidden"
+              >
+                Tutup
+              </button>
+              <span>{results.length} hasil</span>
             </div>
           </div>
         </div>
