@@ -129,7 +129,14 @@ export const authOptions: NextAuthOptions = {
     // Dipanggil saat JWT dibuat atau diperbarui.
     // - Login pertama: simpan access/refresh token + waktu expired.
     // - Request berikutnya: refresh token Supabase kalau sudah/akan expired.
-    async jwt({ token, user, account }): Promise<JWT> {
+    // - updateSession() dari client: perbarui nama user di JWT.
+    async jwt({ token, user, account, trigger, session: sessionUpdate }): Promise<JWT> {
+      // Client memanggil updateSession({ name: "..." }) setelah update profil
+      if (trigger === "update" && sessionUpdate?.name) {
+        token.name = sessionUpdate.name as string;
+        return token;
+      }
+
       // Login awal via Credentials provider
       if (user && "accessToken" in user) {
         return {
@@ -181,6 +188,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (token) {
         session.user.id = (token.userId as string) ?? session.user.id;
+        session.user.name = (token.name as string | null | undefined) ?? session.user.name;
         session.accessToken = token.accessToken as string | undefined;
         session.error = token.error as string | undefined;
       }
