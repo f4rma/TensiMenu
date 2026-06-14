@@ -44,7 +44,7 @@ export default function ProfileWizard({
   mode = "onboarding",
 }: ProfileWizardProps) {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
 
   const [step, setStep] = useState(1);
   const [data, setData] = useState<ProfileFormData>({
@@ -257,6 +257,7 @@ export default function ProfileWizard({
             }),
           });
           if (retryResponse.ok) {
+            await updateSession({ name: data.full_name.trim() });
             router.push("/dashboard");
             router.refresh();
             return;
@@ -271,7 +272,8 @@ export default function ProfileWizard({
         return;
       }
 
-      // Sukses → redirect ke dashboard
+      // Sukses → update session dengan nama baru lalu redirect
+      await updateSession({ name: data.full_name.trim() });
       router.push("/dashboard");
       router.refresh();
     } catch {

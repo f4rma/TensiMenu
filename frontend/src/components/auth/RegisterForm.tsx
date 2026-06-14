@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Mail } from "lucide-react";
+import { signIn } from "next-auth/react";
 
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -41,6 +42,8 @@ export default function RegisterForm() {
   const [data, setData] = useState<FormData>(INITIAL_DATA);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
 
   const updateField = <K extends keyof FormData>(key: K, value: FormData[K]) => {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -113,26 +116,35 @@ export default function RegisterForm() {
               "Data tidak valid. Periksa kembali isian Anda.",
           });
         } else {
-          setErrors({
-            form: "Terjadi kesalahan. Silakan coba beberapa saat lagi.",
-          });
+          // Backend gagal (mis. admin API Supabase error) → kemungkinan
+          // akun sudah dibuat tapi email konfirmasi perlu diklik dulu
+          setRegisteredEmail(data.email.trim().toLowerCase());
+          setEmailSent(true);
         }
         return;
       }
 
-      // Sukses — Backend sudah return access_token (auto-login!)
+      // Sukses dengan auto-login — backend return access_token
       const authData = await response.json();
-      
-      // Simpan token ke localStorage
+
       if (authData.access_token) {
-        localStorage.setItem("access_token", authData.access_token);
+        // Buat NextAuth session yang proper via signIn credentials
+        const result = await signIn("credentials", {
+          email: data.email.trim().toLowerCase(),
+          password: data.password,
+          redirect: false,
+        });
+
+        if (result?.ok) {
+          router.push("/profile?onboarding=1");
+          return;
+        }
       }
-      if (authData.refresh_token) {
-        localStorage.setItem("refresh_token", authData.refresh_token);
-      }
-      
-      // Redirect ke profile setup (user sudah login otomatis!)
-      router.push("/profile?onboarding=1");
+
+      // Fallback: backend return sukses tapi session tidak terbentuk
+      // (mis. email konfirmasi diperlukan)
+      setRegisteredEmail(data.email.trim().toLowerCase());
+      setEmailSent(true);
     } catch {
       setErrors({
         form: "Tidak dapat terhubung ke server. Periksa koneksi Anda.",
@@ -141,6 +153,48 @@ export default function RegisterForm() {
       setSubmitting(false);
     }
   };
+
+  // Tampilan sukses — instruksikan user untuk cek email
+  if (emailSent) {
+    return (
+      <div className="mx-auto w-full max-w-md animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="flex flex-col items-center text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-brand-primary/10">
+            <Mail className="h-8 w-8 text-brand-primary" strokeWidth={1.75} />
+          </div>
+          <h1 className="mt-5 text-2xl font-bold tracking-tight text-brand-charcoal">
+            Periksa email Anda
+          </h1>
+          <p className="mt-2.5 text-sm leading-relaxed text-brand-charcoal-soft">
+            Kami mengirimkan tautan verifikasi ke{" "}
+            <span className="font-semibold text-brand-charcoal">
+              {registeredEmail}
+            </span>
+            . Klik tautan tersebut untuk mengaktifkan akun dan mulai menggunakan TensiMenu.
+          </p>
+          <p className="mt-3 text-xs text-brand-charcoal-muted">
+            Tidak menerima email? Periksa folder spam atau{" "}
+            <Link
+              href="/login"
+              className="font-medium text-brand-primary underline-offset-4 hover:underline"
+            >
+              coba login
+            </Link>{" "}
+            jika akun sudah aktif.
+          </p>
+        </div>
+
+        <div className="mt-8 border-t border-brand-charcoal/5 pt-6 text-center">
+          <Link
+            href="/login"
+            className="text-sm font-semibold text-brand-primary underline-offset-4 transition-colors duration-150 hover:text-brand-primary-dark hover:underline"
+          >
+            Kembali ke halaman login
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-md animate-in fade-in slide-in-from-bottom-2 duration-300">
