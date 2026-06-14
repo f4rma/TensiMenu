@@ -166,16 +166,19 @@ export default function DashboardNavbar({ userName }: DashboardNavbarProps) {
           </div>
         </div>
 
-        {/* Mobile toggle */}
-        <button
-          type="button"
-          onClick={() => setMobileOpen((v) => !v)}
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-brand-charcoal transition-colors duration-150 hover:bg-brand-primary/5 md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
-          aria-label={mobileOpen ? "Tutup menu" : "Buka menu"}
-          aria-expanded={mobileOpen}
-        >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        {/* Mobile: search icon + toggle */}
+        <div className="flex items-center gap-2 md:hidden">
+          <GlobalSearch />
+          <button
+            type="button"
+            onClick={() => setMobileOpen((v) => !v)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-brand-charcoal transition-colors duration-150 hover:bg-brand-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+            aria-label={mobileOpen ? "Tutup menu" : "Buka menu"}
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </nav>
 
       {/* Mobile menu */}
